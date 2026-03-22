@@ -20,9 +20,9 @@ class TeamManagementTest extends TestCase
 
         $response = $this->actingAs($admin)->post('/team', [
             'name' => 'Ayse Yilmaz',
-            'email' => 'ayse@example.com',
+            'email' => 'Ayse@Example.COM',
             'password' => 'secret123',
-            'roles' => ['Satis', 'Destek'],
+            'role_ids' => [$salesRole->id, $supportRole->id],
         ]);
 
         $response->assertRedirect('/team');
@@ -63,14 +63,14 @@ class TeamManagementTest extends TestCase
     public function test_non_admin_cannot_create_team_members(): void
     {
         $user = User::factory()->create();
-        Role::factory()->create(['name' => 'Satis']);
+        $salesRole = Role::factory()->create(['name' => 'Satis']);
 
         $this->actingAs($user)
             ->post('/team', [
                 'name' => 'Yetkisiz Kullanici',
                 'email' => 'yetkisiz@example.com',
                 'password' => 'secret123',
-                'roles' => ['Satis'],
+                'role_ids' => [$salesRole->id],
             ])
             ->assertForbidden();
     }
@@ -91,6 +91,47 @@ class TeamManagementTest extends TestCase
         $this->actingAs($user)
             ->get('/team/create')
             ->assertForbidden();
+    }
+
+    public function test_duplicate_email_with_different_casing_is_rejected(): void
+    {
+        $admin = $this->adminUser();
+        $salesRole = Role::factory()->create(['name' => 'Satis']);
+
+        User::factory()->create([
+            'email' => 'ayse@example.com',
+        ]);
+
+        $response = $this->from('/team/create')
+            ->actingAs($admin)
+            ->post('/team', [
+                'name' => 'Ayse Yilmaz',
+                'email' => 'AYSE@EXAMPLE.COM',
+                'password' => 'secret123',
+                'role_ids' => [$salesRole->id],
+            ]);
+
+        $response->assertRedirect('/team/create');
+        $response->assertSessionHasErrors(['email']);
+        $this->assertSame(1, User::query()->where('email', 'ayse@example.com')->count());
+    }
+
+    public function test_invalid_stale_role_id_is_rejected(): void
+    {
+        $admin = $this->adminUser();
+
+        $response = $this->from('/team/create')
+            ->actingAs($admin)
+            ->post('/team', [
+                'name' => 'Ayse Yilmaz',
+                'email' => 'ayse@example.com',
+                'password' => 'secret123',
+                'role_ids' => [999999],
+            ]);
+
+        $response->assertRedirect('/team/create');
+        $response->assertSessionHasErrors(['role_ids.0']);
+        $this->assertDatabaseMissing('users', ['email' => 'ayse@example.com']);
     }
 
     private function adminUser(): User

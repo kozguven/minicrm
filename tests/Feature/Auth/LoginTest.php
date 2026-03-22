@@ -39,6 +39,22 @@ class LoginTest extends TestCase
         $this->assertGuest();
     }
 
+    public function test_user_can_log_in_with_email_in_different_casing(): void
+    {
+        $user = User::factory()->create([
+            'email' => 'ayse@example.com',
+            'password' => bcrypt('secret123'),
+        ]);
+
+        $response = $this->post('/login', [
+            'email' => 'Ayse@Example.COM',
+            'password' => 'secret123',
+        ]);
+
+        $response->assertRedirect('/today');
+        $this->assertAuthenticatedAs($user);
+    }
+
     public function test_login_is_locked_out_after_too_many_attempts(): void
     {
         $user = User::factory()->create(['password' => bcrypt('secret123')]);

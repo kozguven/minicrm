@@ -42,11 +42,7 @@ class TeamController extends Controller
             'password' => $validated['password'],
         ]);
 
-        $roleIds = Role::query()
-            ->whereIn('name', $validated['roles'])
-            ->pluck('id');
-
-        $teamMember->roles()->sync($roleIds);
+        $teamMember->roles()->sync($validated['role_ids']);
 
         return redirect('/team');
     }

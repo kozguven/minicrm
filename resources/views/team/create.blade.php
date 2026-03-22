@@ -2,7 +2,7 @@
 
 @section('content')
     @php
-        $selectedRoles = collect(old('roles', []));
+        $selectedRoleIds = collect(old('role_ids', []))->map(fn ($roleId) => (int) $roleId);
     @endphp
 
     <section class="card" style="width: min(100%, 820px);">
@@ -47,10 +47,10 @@
                         <label style="display: flex; gap: 0.75rem; align-items: center; border: 1px solid var(--border); border-radius: 14px; padding: 0.85rem 1rem; margin: 0;">
                             <input
                                 type="checkbox"
-                                name="roles[]"
-                                value="{{ $role->name }}"
+                                name="role_ids[]"
+                                value="{{ $role->id }}"
                                 style="width: auto;"
-                                @checked($selectedRoles->contains($role->name))
+                                @checked($selectedRoleIds->contains($role->id))
                             >
                             <span>{{ $role->name }}</span>
                         </label>
