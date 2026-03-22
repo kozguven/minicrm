@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\RoleController;
+use App\Http\Controllers\TeamController;
 use Illuminate\Support\Facades\Route;
 
 Route::redirect('/', '/today');
@@ -13,6 +14,10 @@ Route::middleware('auth')->group(function () {
 
     Route::resource('roles', RoleController::class)
         ->except(['show', 'destroy']);
+
+    Route::get('/team', [TeamController::class, 'index']);
+    Route::get('/team/create', [TeamController::class, 'create']);
+    Route::post('/team', [TeamController::class, 'store']);
 
     Route::post('/logout', [LoginController::class, 'destroy'])->name('logout');
 });
