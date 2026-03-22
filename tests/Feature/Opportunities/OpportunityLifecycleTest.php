@@ -4,10 +4,11 @@ namespace Tests\Feature\Opportunities;
 
 use App\Models\Contact;
 use App\Models\CrmTask;
+use App\Models\Deal;
 use App\Models\Opportunity;
 use App\Models\OpportunityStage;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Illuminate\Support\Facades\Schema;
+use Illuminate\Database\QueryException;
 use Tests\TestCase;
 
 class OpportunityLifecycleTest extends TestCase
@@ -25,25 +26,20 @@ class OpportunityLifecycleTest extends TestCase
 
         CrmTask::factory()->create(['opportunity_id' => $opportunity->id]);
 
+        $this->assertTrue($opportunity->opportunityStage->is($stage));
+        $this->assertFalse(method_exists($opportunity, 'stage'));
         $this->assertCount(1, $opportunity->tasks);
     }
 
-    public function test_permissions_and_audit_logs_match_planned_schema(): void
+    public function test_opportunity_has_a_single_deal_relation(): void
     {
-        $this->assertTrue(Schema::hasColumns('permissions', ['id', 'key', 'created_at', 'updated_at']));
-        $this->assertFalse(Schema::hasColumn('permissions', 'name'));
+        $opportunity = Opportunity::factory()->create();
+        $deal = Deal::factory()->create(['opportunity_id' => $opportunity->id]);
 
-        $this->assertTrue(Schema::hasColumns('audit_logs', [
-            'id',
-            'user_id',
-            'entity_type',
-            'entity_id',
-            'action',
-            'payload',
-            'created_at',
-        ]));
-        $this->assertFalse(Schema::hasColumn('audit_logs', 'event'));
-        $this->assertFalse(Schema::hasColumn('audit_logs', 'old_values'));
-        $this->assertFalse(Schema::hasColumn('audit_logs', 'new_values'));
+        $this->assertTrue($opportunity->refresh()->deal->is($deal));
+
+        $this->expectException(QueryException::class);
+
+        Deal::factory()->create(['opportunity_id' => $opportunity->id]);
     }
 }

@@ -33,16 +33,6 @@ class Opportunity extends Model
     }
 
     /**
-     * Backwards-friendly alias for the current opportunity stage.
-     *
-     * @return BelongsTo<OpportunityStage, $this>
-     */
-    public function stage(): BelongsTo
-    {
-        return $this->opportunityStage();
-    }
-
-    /**
      * @return HasMany<CrmTask, $this>
      */
     public function tasks(): HasMany
