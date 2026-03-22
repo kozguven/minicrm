@@ -1,0 +1,61 @@
+<?php
+
+return [
+    'accepted' => ':attribute kabul edilmelidir.',
+    'active_url' => ':attribute geçerli bir URL değil.',
+    'after' => ':attribute, :date tarihinden sonra olmalıdır.',
+    'after_or_equal' => ':attribute, :date tarihinden sonra veya eşit olmalıdır.',
+    'alpha' => ':attribute yalnızca harflerden oluşmalıdır.',
+    'alpha_dash' => ':attribute yalnızca harf, rakam, tire ve alt çizgi içerebilir.',
+    'alpha_num' => ':attribute yalnızca harf ve rakamlardan oluşmalıdır.',
+    'array' => ':attribute bir dizi olmalıdır.',
+    'before' => ':attribute, :date tarihinden önce olmalıdır.',
+    'before_or_equal' => ':attribute, :date tarihinden önce veya eşit olmalıdır.',
+    'between' => [
+        'array' => ':attribute :min ile :max arasında öğe içermelidir.',
+        'file' => ':attribute :min ile :max kilobayt arasında olmalıdır.',
+        'numeric' => ':attribute :min ile :max arasında olmalıdır.',
+        'string' => ':attribute :min ile :max karakter arasında olmalıdır.',
+    ],
+    'boolean' => ':attribute alanı true veya false olmalıdır.',
+    'confirmed' => ':attribute doğrulaması eşleşmiyor.',
+    'date' => ':attribute geçerli bir tarih değil.',
+    'date_equals' => ':attribute, :date tarihine eşit olmalıdır.',
+    'date_format' => ':attribute :format biçimiyle eşleşmiyor.',
+    'different' => ':attribute ile :other farklı olmalıdır.',
+    'email' => ':attribute geçerli bir e-posta adresi olmalıdır.',
+    'filled' => ':attribute alanı zorunludur.',
+    'gt' => [
+        'numeric' => ':attribute :value değerinden büyük olmalıdır.',
+        'string' => ':attribute :value karakterden uzun olmalıdır.',
+    ],
+    'gte' => [
+        'numeric' => ':attribute :value değerinden büyük veya eşit olmalıdır.',
+        'string' => ':attribute :value karakter veya daha uzun olmalıdır.',
+    ],
+    'image' => ':attribute bir görsel olmalıdır.',
+    'in' => 'Seçilen :attribute geçersiz.',
+    'integer' => ':attribute bir tam sayı olmalıdır.',
+    'ip' => ':attribute geçerli bir IP adresi olmalıdır.',
+    'max' => [
+        'numeric' => ':attribute en fazla :max olabilir.',
+        'string' => ':attribute en fazla :max karakter olabilir.',
+    ],
+    'min' => [
+        'numeric' => ':attribute en az :min olmalıdır.',
+        'string' => ':attribute en az :min karakter olmalıdır.',
+    ],
+    'not_in' => 'Seçilen :attribute geçersiz.',
+    'nullable' => '',
+    'numeric' => ':attribute bir sayı olmalıdır.',
+    'present' => ':attribute alanı mevcut olmalıdır.',
+    'required' => ':attribute alanı zorunludur.',
+    'string' => ':attribute bir metin olmalıdır.',
+    'unique' => 'Bu :attribute zaten alınmış.',
+    'url' => ':attribute geçerli bir URL olmalıdır.',
+
+    'attributes' => [
+        'email' => 'e-posta',
+        'password' => 'şifre',
+    ],
+];
