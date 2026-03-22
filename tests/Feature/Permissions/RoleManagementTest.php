@@ -53,6 +53,47 @@ class RoleManagementTest extends TestCase
             ->assertForbidden();
     }
 
+    public function test_non_admin_cannot_view_roles_index(): void
+    {
+        $user = User::factory()->create();
+
+        $this->actingAs($user)
+            ->get('/roles')
+            ->assertForbidden();
+    }
+
+    public function test_non_admin_cannot_view_role_create_screen(): void
+    {
+        $user = User::factory()->create();
+
+        $this->actingAs($user)
+            ->get('/roles/create')
+            ->assertForbidden();
+    }
+
+    public function test_non_admin_cannot_view_role_edit_screen(): void
+    {
+        $user = User::factory()->create();
+        $role = Role::factory()->create();
+
+        $this->actingAs($user)
+            ->get("/roles/{$role->id}/edit")
+            ->assertForbidden();
+    }
+
+    public function test_non_admin_cannot_update_role(): void
+    {
+        $user = User::factory()->create();
+        $role = Role::factory()->create(['name' => 'Operasyon']);
+
+        $this->actingAs($user)
+            ->put("/roles/{$role->id}", [
+                'name' => 'Degisti',
+                'permissions' => [],
+            ])
+            ->assertForbidden();
+    }
+
     public function test_admin_can_update_role_and_sync_selected_permissions(): void
     {
         Permission::factory()->createMany([
@@ -83,6 +124,27 @@ class RoleManagementTest extends TestCase
             ['companies.create', 'deals.export'],
             $role->permissions()->orderBy('key')->pluck('key')->all(),
         );
+    }
+
+    public function test_admin_role_name_cannot_be_changed(): void
+    {
+        $admin = $this->adminUser();
+        $adminRole = Role::query()->where('name', 'Admin')->firstOrFail();
+
+        $response = $this->from("/roles/{$adminRole->id}/edit")
+            ->actingAs($admin)
+            ->put("/roles/{$adminRole->id}", [
+                'name' => 'Super Admin',
+                'permissions' => [],
+            ]);
+
+        $response->assertRedirect("/roles/{$adminRole->id}/edit");
+        $response->assertSessionHasErrors(['name']);
+
+        $this->assertDatabaseHas('roles', [
+            'id' => $adminRole->id,
+            'name' => 'Admin',
+        ]);
     }
 
     private function adminUser(): User

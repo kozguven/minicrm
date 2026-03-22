@@ -10,7 +10,7 @@ class UpdateRoleRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return (bool) $this->user()?->roles()->where('name', 'Admin')->exists();
+        return (bool) $this->user()?->isAdmin();
     }
 
     /**
@@ -22,7 +22,17 @@ class UpdateRoleRequest extends FormRequest
         $role = $this->route('role');
 
         return [
-            'name' => ['required', 'string', 'max:255', Rule::unique('roles', 'name')->ignore($role)],
+            'name' => [
+                'required',
+                'string',
+                'max:255',
+                Rule::unique('roles', 'name')->ignore($role),
+                function (string $attribute, mixed $value, \Closure $fail) use ($role): void {
+                    if ($role->name === 'Admin' && $value !== 'Admin') {
+                        $fail('Admin role adi degistirilemez.');
+                    }
+                },
+            ],
             'permissions' => ['sometimes', 'array'],
             'permissions.*' => ['string', Rule::exists('permissions', 'key')],
         ];

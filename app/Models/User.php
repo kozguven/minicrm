@@ -27,6 +27,11 @@ class User extends Authenticatable
         return $this->belongsToMany(Role::class);
     }
 
+    public function isAdmin(): bool
+    {
+        return $this->roles()->where('name', 'Admin')->exists();
+    }
+
     /**
      * Derived permission query across the user's roles.
      *

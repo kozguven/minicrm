@@ -80,7 +80,7 @@ class RoleController extends Controller
     private function ensureAdmin(Request $request): void
     {
         abort_unless(
-            $request->user()?->roles()->where('name', 'Admin')->exists(),
+            $request->user()?->isAdmin(),
             403,
         );
     }

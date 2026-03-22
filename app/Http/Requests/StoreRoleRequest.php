@@ -9,7 +9,7 @@ class StoreRoleRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return (bool) $this->user()?->roles()->where('name', 'Admin')->exists();
+        return (bool) $this->user()?->isAdmin();
     }
 
     /**
