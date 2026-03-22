@@ -32,7 +32,7 @@ class User extends Authenticatable
      *
      * @return Builder<Permission>
      */
-    public function permissions(): Builder
+    public function permissionsQuery(): Builder
     {
         return Permission::query()
             ->select('permissions.*')

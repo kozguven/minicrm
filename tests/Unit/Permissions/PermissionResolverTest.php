@@ -13,6 +13,25 @@ class PermissionResolverTest extends TestCase
 {
     use RefreshDatabase;
 
+    public function test_user_permission_query_returns_expected_permission_keys(): void
+    {
+        $user = User::factory()->create();
+        $role = Role::factory()->create();
+        $otherRole = Role::factory()->create();
+        $viewPermission = Permission::factory()->create(['key' => 'companies.view']);
+        $editPermission = Permission::factory()->create(['key' => 'companies.edit']);
+        $unrelatedPermission = Permission::factory()->create(['key' => 'contacts.view']);
+
+        $role->permissions()->attach([$viewPermission->id, $editPermission->id]);
+        $otherRole->permissions()->attach($unrelatedPermission);
+        $user->roles()->attach([$role->id, $otherRole->id]);
+
+        $this->assertSame(
+            ['companies.edit', 'companies.view', 'contacts.view'],
+            $user->permissionsQuery()->orderBy('permissions.key')->pluck('permissions.key')->all(),
+        );
+    }
+
     public function test_user_has_permission_through_role(): void
     {
         $user = User::factory()->create();
