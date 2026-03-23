@@ -1,82 +1,75 @@
 @extends('layouts.app')
 
 @section('content')
-    <section class="card" style="width: min(100%, 960px);">
-        <div class="stack">
-            <div style="display: flex; justify-content: space-between; align-items: center; gap: 1rem; flex-wrap: wrap;">
-                <div>
-                    <p class="muted" style="margin: 0 0 0.35rem; font-weight: 600;">CRM &gt; Firsatlar</p>
-                    <h1 style="margin: 0 0 0.35rem; font-size: 1.75rem;">Firsatlar</h1>
-                    <p class="muted" style="margin: 0;">Potansiyel satislari asama bazli takip edin ve boru hattini guncel tutun.</p>
-                </div>
+    <x-ui.panel size="xl">
+        <div class="surface-stack">
+            <x-ui.page-header
+                eyebrow="CRM / Fırsatlar"
+                title="Fırsatlar"
+                subtitle="Potansiyel satışları aşama bazlı takip edin ve boru hattını güncel tutun."
+            >
                 @can('create', \App\Models\Opportunity::class)
-                    <a class="button" href="{{ url('/opportunities/create') }}">Yeni Firsat</a>
+                    <a class="btn btn-primary" href="{{ url('/opportunities/create') }}">Yeni Fırsat</a>
                 @endcan
-            </div>
+            </x-ui.page-header>
 
             @if ($errors->any())
-                <div class="error">
+                <x-ui.notice tone="danger">
                     @foreach ($errors->all() as $error)
                         <div>{{ $error }}</div>
                     @endforeach
-                </div>
+                </x-ui.notice>
             @endif
 
             @if ($opportunities->isEmpty())
-                <p class="muted" style="margin: 0;">Henuz firsat kaydi bulunmuyor.</p>
+                <x-ui.empty-state>Henüz fırsat kaydı bulunmuyor.</x-ui.empty-state>
             @else
-                <div class="stack">
+                <div class="content-list">
                     @foreach ($opportunities as $opportunity)
-                        <article style="border: 1px solid var(--border); border-radius: 16px; padding: 1rem;">
-                            <div class="stack" style="gap: 0.75rem;">
-                                <div style="display: flex; justify-content: space-between; gap: 1rem; align-items: flex-start; flex-wrap: wrap;">
-                                    <div class="stack" style="gap: 0.35rem;">
-                                        <h2 style="margin: 0; font-size: 1.15rem;">{{ $opportunity->title }}</h2>
-                                        <p class="muted" style="margin: 0;">
+                        <article class="content-card">
+                            <div class="surface-stack" style="gap: 0.7rem;">
+                                <div class="content-card__header">
+                                    <div>
+                                        <h2 class="content-card__title">{{ $opportunity->title }}</h2>
+                                        <p class="muted">
                                             {{ $opportunity->contact?->first_name }} {{ $opportunity->contact?->last_name }}
                                             @if ($opportunity->contact?->company)
                                                 · {{ $opportunity->contact->company->name }}
                                             @endif
                                         </p>
                                     </div>
-                                    <div class="stack" style="gap: 0.35rem; text-align: right;">
-                                        <span class="muted">{{ $opportunity->opportunityStage?->name }}</span>
+                                    <div class="text-right">
+                                        <p class="muted">{{ $opportunity->opportunityStage?->name }}</p>
                                         <strong>{{ number_format((float) $opportunity->value, 2, ',', '.') }} TL</strong>
                                     </div>
                                 </div>
 
-                                <p class="muted" style="margin: 0;">
-                                    Beklenen kapanis: {{ $opportunity->expected_close_date ?: 'Belirlenmedi' }}
-                                </p>
+                                <p class="muted">Beklenen kapanış: {{ $opportunity->expected_close_date ?: 'Belirlenmedi' }}</p>
 
                                 @if ($opportunity->deal)
-                                    <p class="muted" style="margin: 0;">
-                                        Anlasma olustu:
+                                    <x-ui.notice tone="success">
+                                        Anlaşma oluştu:
                                         @if ($opportunity->deal->amount !== null)
                                             {{ number_format((float) $opportunity->deal->amount, 2, ',', '.') }} TL
                                         @else
                                             Tutar bekleniyor
                                         @endif
-                                    </p>
+                                    </x-ui.notice>
                                 @elseif (auth()->user()?->can('create', \App\Models\Deal::class))
                                     <form method="POST" action="{{ url("/opportunities/{$opportunity->id}/convert") }}">
                                         @csrf
-                                        <button class="button" type="submit">Anlasmaya Donustur</button>
+                                        <button class="btn btn-primary" type="submit">Anlaşmaya Dönüştür</button>
                                     </form>
                                 @endif
 
                                 @can('update', $opportunity)
-                                    <form method="POST" action="{{ url("/opportunities/{$opportunity->id}/stage") }}" style="display: flex; gap: 0.75rem; flex-wrap: wrap; align-items: end;">
+                                    <form method="POST" action="{{ url("/opportunities/{$opportunity->id}/stage") }}" class="inline-actions">
                                         @csrf
                                         @method('PATCH')
 
-                                        <div style="flex: 1 1 220px;">
-                                            <label for="stage-{{ $opportunity->id }}">Asama</label>
-                                            <select
-                                                id="stage-{{ $opportunity->id }}"
-                                                name="opportunity_stage_id"
-                                                style="width: 100%; border: 1px solid var(--border); border-radius: 12px; padding: 0.85rem 0.95rem; font: inherit; background: #fff;"
-                                            >
+                                        <div class="field" style="flex: 1 1 220px;">
+                                            <label class="field-label" for="stage-{{ $opportunity->id }}">Aşama</label>
+                                            <select class="select" id="stage-{{ $opportunity->id }}" name="opportunity_stage_id">
                                                 @foreach ($stages as $stage)
                                                     <option value="{{ $stage->id }}" @selected($opportunity->opportunity_stage_id === $stage->id)>
                                                         {{ $stage->name }}
@@ -85,7 +78,7 @@
                                             </select>
                                         </div>
 
-                                        <button class="button" type="submit">Asamayi Guncelle</button>
+                                        <button class="btn btn-secondary" type="submit">Aşamayı Güncelle</button>
                                     </form>
                                 @endcan
                             </div>
@@ -94,5 +87,5 @@
                 </div>
             @endif
         </div>
-    </section>
+    </x-ui.panel>
 @endsection

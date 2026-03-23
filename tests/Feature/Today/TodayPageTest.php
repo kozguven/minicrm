@@ -68,7 +68,7 @@ class TodayPageTest extends TestCase
         $this->actingAs($user)
             ->get('/today')
             ->assertOk()
-            ->assertSeeText('Today')
+            ->assertSeeText('Günüm')
             ->assertSeeInOrder([
                 'Aranacak Kişiler',
                 'Kritik Fırsatlar',

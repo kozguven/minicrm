@@ -1,34 +1,32 @@
 @extends('layouts.app')
 
 @section('content')
-    <section class="card">
-        <div class="stack">
-            <div>
-                <h1 style="margin: 0 0 0.35rem; font-size: 1.75rem;">Giriş Yap</h1>
-                <p class="muted" style="margin: 0;">Mini CRM hesabınıza erişmek için oturum açın.</p>
-            </div>
+    <x-ui.panel size="sm">
+        <div class="surface-stack">
+            <x-ui.page-header
+                title="Giriş Yap"
+                subtitle="Mini CRM hesabınıza erişmek için oturum açın."
+            />
 
             @if ($errors->any())
-                <div class="error">
-                    {{ $errors->first() }}
-                </div>
+                <x-ui.notice tone="danger">{{ $errors->first() }}</x-ui.notice>
             @endif
 
-            <form method="POST" action="{{ route('login') }}" class="stack">
+            <form method="POST" action="{{ route('login') }}" class="form-stack">
                 @csrf
 
-                <div>
-                    <label for="email">E-posta</label>
-                    <input id="email" name="email" type="email" value="{{ old('email') }}" autocomplete="email" required autofocus>
+                <div class="field">
+                    <label class="field-label" for="email">E-posta</label>
+                    <input class="input" id="email" name="email" type="email" value="{{ old('email') }}" autocomplete="email" required autofocus>
                 </div>
 
-                <div>
-                    <label for="password">Şifre</label>
-                    <input id="password" name="password" type="password" autocomplete="current-password" required>
+                <div class="field">
+                    <label class="field-label" for="password">Şifre</label>
+                    <input class="input" id="password" name="password" type="password" autocomplete="current-password" required>
                 </div>
 
-                <button class="button" type="submit">Giriş Yap</button>
+                <button class="btn btn-primary" type="submit">Giriş Yap</button>
             </form>
         </div>
-    </section>
+    </x-ui.panel>
 @endsection

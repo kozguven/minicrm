@@ -61,10 +61,10 @@ class DealConversionTest extends TestCase
         $this->actingAs($user)
             ->get('/deals')
             ->assertOk()
-            ->assertSeeText('Anlasmalar')
+            ->assertSeeText('Anlaşmalar')
             ->assertSeeText('Mini CRM Yenileme')
             ->assertSeeText('Ayse Yilmaz')
-            ->assertDontSeeText('Yeni Anlasma');
+            ->assertDontSeeText('Yeni Anlaşma');
     }
 
     public function test_user_with_companies_view_and_create_permissions_can_open_deal_create_screen(): void
@@ -77,7 +77,7 @@ class DealConversionTest extends TestCase
         $this->actingAs($user)
             ->get('/deals/create')
             ->assertOk()
-            ->assertSeeText('Yeni Anlasma')
+            ->assertSeeText('Yeni Anlaşma')
             ->assertSeeText('Kurulum Paketi');
     }
 

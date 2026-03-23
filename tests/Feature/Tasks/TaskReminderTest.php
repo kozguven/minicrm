@@ -51,11 +51,11 @@ class TaskReminderTest extends TestCase
         $this->actingAs($user)
             ->get('/tasks')
             ->assertOk()
-            ->assertSeeText('Gorevler')
+            ->assertSeeText('Görevler')
             ->assertSeeText('Musteriyi ara')
             ->assertSeeText('Gecikmiş')
             ->assertSeeText($overdueTask->opportunity->title)
-            ->assertDontSeeText('Yeni Gorev');
+            ->assertDontSeeText('Yeni Görev');
     }
 
     public function test_user_with_companies_view_and_create_permissions_sees_task_create_cta_on_index(): void
@@ -65,7 +65,7 @@ class TaskReminderTest extends TestCase
         $this->actingAs($user)
             ->get('/tasks')
             ->assertOk()
-            ->assertSeeText('Yeni Gorev');
+            ->assertSeeText('Yeni Görev');
     }
 
     public function test_user_with_only_companies_view_permission_cannot_open_task_create_screen(): void
@@ -112,10 +112,10 @@ class TaskReminderTest extends TestCase
         $this->actingAs($user)
             ->get('/tasks/create')
             ->assertOk()
-            ->assertSeeText('Yeni Gorev')
+            ->assertSeeText('Yeni Görev')
             ->assertSeeText('Mini CRM Retainer')
             ->assertSeeText($opportunity->contact->first_name)
-            ->assertSeeText('Vazgec');
+            ->assertSeeText('Vazgeç');
     }
 
     public function test_user_with_companies_view_and_create_permissions_can_create_task_and_see_success_message_on_index(): void
