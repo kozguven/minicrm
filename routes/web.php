@@ -4,6 +4,7 @@ use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\CompanyController;
 use App\Http\Controllers\ContactController;
 use App\Http\Controllers\CrmTaskController;
+use App\Http\Controllers\DealController;
 use App\Http\Controllers\OpportunityController;
 use App\Http\Controllers\RoleController;
 use App\Http\Controllers\TeamController;
@@ -31,6 +32,11 @@ Route::middleware('auth')->group(function () {
     Route::get('/opportunities/create', [OpportunityController::class, 'create']);
     Route::post('/opportunities', [OpportunityController::class, 'store']);
     Route::patch('/opportunities/{opportunity}/stage', [OpportunityController::class, 'updateStage']);
+    Route::post('/opportunities/{opportunity}/convert', [DealController::class, 'convert']);
+
+    Route::get('/deals', [DealController::class, 'index']);
+    Route::get('/deals/create', [DealController::class, 'create']);
+    Route::post('/deals', [DealController::class, 'store']);
 
     Route::get('/tasks', [CrmTaskController::class, 'index']);
     Route::get('/tasks/create', [CrmTaskController::class, 'create']);

@@ -49,6 +49,22 @@
                                     Beklenen kapanis: {{ $opportunity->expected_close_date ?: 'Belirlenmedi' }}
                                 </p>
 
+                                @if ($opportunity->deal)
+                                    <p class="muted" style="margin: 0;">
+                                        Anlasma olustu:
+                                        @if ($opportunity->deal->amount !== null)
+                                            {{ number_format((float) $opportunity->deal->amount, 2, ',', '.') }} TL
+                                        @else
+                                            Tutar bekleniyor
+                                        @endif
+                                    </p>
+                                @elseif (auth()->user()?->can('create', \App\Models\Deal::class))
+                                    <form method="POST" action="{{ url("/opportunities/{$opportunity->id}/convert") }}">
+                                        @csrf
+                                        <button class="button" type="submit">Anlasmaya Donustur</button>
+                                    </form>
+                                @endif
+
                                 @can('update', $opportunity)
                                     <form method="POST" action="{{ url("/opportunities/{$opportunity->id}/stage") }}" style="display: flex; gap: 0.75rem; flex-wrap: wrap; align-items: end;">
                                         @csrf

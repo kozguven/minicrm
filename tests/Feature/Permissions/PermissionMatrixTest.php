@@ -5,6 +5,7 @@ namespace Tests\Feature\Permissions;
 use App\Models\Company;
 use App\Models\Contact;
 use App\Models\CrmTask;
+use App\Models\Deal;
 use App\Models\Opportunity;
 use App\Models\OpportunityStage;
 use App\Models\Permission;
@@ -112,5 +113,35 @@ class PermissionMatrixTest extends TestCase
         $this->assertFalse(Gate::forUser($viewOnlyUser)->allows('create', CrmTask::class));
         $this->assertFalse(Gate::forUser($createOnlyUser)->allows('create', CrmTask::class));
         $this->assertTrue(Gate::forUser($fullAccessUser)->allows('create', CrmTask::class));
+    }
+
+    public function test_deal_policy_uses_view_permission_for_listing_and_requires_view_plus_create_for_creation(): void
+    {
+        $viewOnlyUser = User::factory()->create();
+        $viewOnlyRole = Role::factory()->create();
+        $viewPermission = Permission::factory()->create(['key' => 'companies.view']);
+
+        $viewOnlyRole->permissions()->attach([$viewPermission->id]);
+        $viewOnlyUser->roles()->attach($viewOnlyRole);
+
+        $createOnlyUser = User::factory()->create();
+        $createOnlyRole = Role::factory()->create();
+        $createPermission = Permission::factory()->create(['key' => 'companies.create']);
+
+        $createOnlyRole->permissions()->attach([$createPermission->id]);
+        $createOnlyUser->roles()->attach($createOnlyRole);
+
+        $fullAccessUser = User::factory()->create();
+        $fullAccessRole = Role::factory()->create();
+        $deal = Deal::factory()->create();
+
+        $fullAccessRole->permissions()->attach([$viewPermission->id, $createPermission->id]);
+        $fullAccessUser->roles()->attach($fullAccessRole);
+
+        $this->assertTrue(Gate::forUser($viewOnlyUser)->allows('viewAny', Deal::class));
+        $this->assertTrue(Gate::forUser($viewOnlyUser)->allows('view', $deal));
+        $this->assertFalse(Gate::forUser($viewOnlyUser)->allows('create', Deal::class));
+        $this->assertFalse(Gate::forUser($createOnlyUser)->allows('create', Deal::class));
+        $this->assertTrue(Gate::forUser($fullAccessUser)->allows('create', Deal::class));
     }
 }

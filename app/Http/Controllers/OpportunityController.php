@@ -19,7 +19,7 @@ class OpportunityController extends Controller
 
         return view('opportunities.index', [
             'opportunities' => Opportunity::query()
-                ->with(['contact.company', 'opportunityStage'])
+                ->with(['contact.company', 'opportunityStage', 'deal'])
                 ->orderByDesc('expected_close_date')
                 ->orderBy('title')
                 ->get(),
