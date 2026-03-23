@@ -87,6 +87,32 @@ class OpportunityStageTransitionTest extends TestCase
             ->assertSeeText('Yeni Firsat');
     }
 
+    public function test_user_with_only_companies_view_permission_cannot_open_opportunity_create_screen(): void
+    {
+        $user = $this->userWithPermissions(['companies.view']);
+
+        $this->actingAs($user)
+            ->get('/opportunities/create')
+            ->assertForbidden();
+    }
+
+    public function test_user_with_only_companies_view_permission_cannot_create_opportunity(): void
+    {
+        $user = $this->userWithPermissions(['companies.view']);
+        $contact = Contact::factory()->create();
+        $stage = OpportunityStage::factory()->create();
+
+        $this->actingAs($user)
+            ->post('/opportunities', [
+                'contact_id' => $contact->id,
+                'opportunity_stage_id' => $stage->id,
+                'title' => 'Yetkisiz Firsat',
+                'value' => '9000',
+                'expected_close_date' => '2026-04-30',
+            ])
+            ->assertForbidden();
+    }
+
     public function test_user_with_companies_create_permission_can_open_opportunity_create_screen(): void
     {
         $user = $this->userWithPermissions(['companies.create']);
@@ -110,7 +136,8 @@ class OpportunityStageTransitionTest extends TestCase
         $contact = Contact::factory()->create();
         $stage = OpportunityStage::factory()->create(['name' => 'Yeni']);
 
-        $this->actingAs($user)
+        $this->followingRedirects()
+            ->actingAs($user)
             ->post('/opportunities', [
                 'contact_id' => $contact->id,
                 'opportunity_stage_id' => $stage->id,
@@ -118,7 +145,8 @@ class OpportunityStageTransitionTest extends TestCase
                 'value' => '15000.50',
                 'expected_close_date' => '2026-04-30',
             ])
-            ->assertRedirect('/opportunities');
+            ->assertOk()
+            ->assertSeeText('Today');
 
         $this->assertDatabaseHas('opportunities', [
             'contact_id' => $contact->id,
@@ -134,16 +162,42 @@ class OpportunityStageTransitionTest extends TestCase
         $opportunity = Opportunity::factory()->create();
         $nextStage = OpportunityStage::factory()->create(['name' => 'Teklif']);
 
-        $this->actingAs($user)
+        $this->followingRedirects()
+            ->actingAs($user)
             ->patch("/opportunities/{$opportunity->id}/stage", [
                 'opportunity_stage_id' => $nextStage->id,
             ])
-            ->assertRedirect('/opportunities');
+            ->assertOk()
+            ->assertSeeText('Today');
 
         $this->assertDatabaseHas('opportunities', [
             'id' => $opportunity->id,
             'opportunity_stage_id' => $nextStage->id,
         ]);
+    }
+
+    public function test_stage_validation_errors_are_shown_on_opportunities_index(): void
+    {
+        $user = $this->userWithPermissions(['companies.view', 'opportunities.edit']);
+        $opportunity = Opportunity::factory()->create();
+
+        $response = $this->from('/opportunities')
+            ->actingAs($user)
+            ->patch("/opportunities/{$opportunity->id}/stage", [
+                'opportunity_stage_id' => 999999,
+            ]);
+
+        $response->assertRedirect('/opportunities');
+        $response->assertSessionHasErrors('opportunity_stage_id');
+
+        $this->followingRedirects()
+            ->from('/opportunities')
+            ->actingAs($user)
+            ->patch("/opportunities/{$opportunity->id}/stage", [
+                'opportunity_stage_id' => 999999,
+            ])
+            ->assertOk()
+            ->assertSeeText('Lutfen gecerli bir asama secin.');
     }
 
     /**

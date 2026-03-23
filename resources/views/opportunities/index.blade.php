@@ -14,6 +14,14 @@
                 @endcan
             </div>
 
+            @if ($errors->any())
+                <div class="error">
+                    @foreach ($errors->all() as $error)
+                        <div>{{ $error }}</div>
+                    @endforeach
+                </div>
+            @endif
+
             @if ($opportunities->isEmpty())
                 <p class="muted" style="margin: 0;">Henuz firsat kaydi bulunmuyor.</p>
             @else

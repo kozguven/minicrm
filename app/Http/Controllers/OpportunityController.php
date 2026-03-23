@@ -8,6 +8,7 @@ use App\Models\Contact;
 use App\Models\Opportunity;
 use App\Models\OpportunityStage;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
 use Illuminate\View\View;
 
 class OpportunityController extends Controller
@@ -50,13 +51,22 @@ class OpportunityController extends Controller
     {
         Opportunity::query()->create($request->validated());
 
-        return redirect('/opportunities');
+        return $this->successRedirect($request, 'Firsat kaydedildi.');
     }
 
     public function updateStage(UpdateOpportunityStageRequest $request, Opportunity $opportunity): RedirectResponse
     {
         $opportunity->update($request->validated());
 
-        return redirect('/opportunities');
+        return $this->successRedirect($request, 'Firsat asamasi guncellendi.');
+    }
+
+    private function successRedirect(Request $request, string $message): RedirectResponse
+    {
+        $target = $request->user()?->can('viewAny', Opportunity::class)
+            ? '/opportunities'
+            : '/today';
+
+        return redirect($target)->with('status', $message);
     }
 }
