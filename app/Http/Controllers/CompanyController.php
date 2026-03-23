@@ -11,6 +11,8 @@ class CompanyController extends Controller
 {
     public function index(): View
     {
+        $this->authorize('viewAny', Company::class);
+
         return view('companies.index', [
             'companies' => Company::query()
                 ->withCount('contacts')
@@ -21,6 +23,8 @@ class CompanyController extends Controller
 
     public function create(): View
     {
+        $this->authorize('viewAny', Company::class);
+
         return view('companies.create');
     }
 

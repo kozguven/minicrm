@@ -3,6 +3,7 @@
 namespace Tests\Feature\Permissions;
 
 use App\Models\Company;
+use App\Models\Contact;
 use App\Models\Permission;
 use App\Models\Role;
 use App\Models\User;
@@ -33,5 +34,33 @@ class PermissionMatrixTest extends TestCase
         $company = Company::factory()->create();
 
         $this->assertFalse(Gate::forUser($user)->allows('view', $company));
+    }
+
+    public function test_company_policy_maps_view_any_and_create_to_permission_keys(): void
+    {
+        $user = User::factory()->create();
+        $role = Role::factory()->create();
+        $viewPermission = Permission::factory()->create(['key' => 'companies.view']);
+        $createPermission = Permission::factory()->create(['key' => 'companies.create']);
+
+        $role->permissions()->attach([$viewPermission->id, $createPermission->id]);
+        $user->roles()->attach($role);
+
+        $this->assertTrue(Gate::forUser($user)->allows('viewAny', Company::class));
+        $this->assertTrue(Gate::forUser($user)->allows('create', Company::class));
+    }
+
+    public function test_contact_policy_reuses_company_permission_keys_for_view_any_and_create(): void
+    {
+        $user = User::factory()->create();
+        $role = Role::factory()->create();
+        $viewPermission = Permission::factory()->create(['key' => 'companies.view']);
+        $createPermission = Permission::factory()->create(['key' => 'companies.create']);
+
+        $role->permissions()->attach([$viewPermission->id, $createPermission->id]);
+        $user->roles()->attach($role);
+
+        $this->assertTrue(Gate::forUser($user)->allows('viewAny', Contact::class));
+        $this->assertTrue(Gate::forUser($user)->allows('create', Contact::class));
     }
 }

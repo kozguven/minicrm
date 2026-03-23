@@ -2,11 +2,11 @@
 
 namespace App\Policies;
 
-use App\Models\Company;
+use App\Models\Contact;
 use App\Models\User;
 use App\Services\Permissions\PermissionResolver;
 
-class CompanyPolicy
+class ContactPolicy
 {
     public function __construct(
         private readonly PermissionResolver $permissionResolver,
@@ -14,11 +14,6 @@ class CompanyPolicy
     }
 
     public function viewAny(User $user): bool
-    {
-        return $this->permissionResolver->can($user, 'companies.view');
-    }
-
-    public function view(User $user, Company $company): bool
     {
         return $this->permissionResolver->can($user, 'companies.view');
     }

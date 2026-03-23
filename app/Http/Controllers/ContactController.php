@@ -12,6 +12,8 @@ class ContactController extends Controller
 {
     public function index(): View
     {
+        $this->authorize('viewAny', Contact::class);
+
         return view('contacts.index', [
             'contacts' => Contact::query()
                 ->with('company')
@@ -23,6 +25,8 @@ class ContactController extends Controller
 
     public function create(): View
     {
+        $this->authorize('viewAny', Contact::class);
+
         return view('contacts.create', [
             'companies' => Company::query()->orderBy('name')->get(),
         ]);
