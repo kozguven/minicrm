@@ -25,7 +25,7 @@ class ContactController extends Controller
 
     public function create(): View
     {
-        $this->authorize('viewAny', Contact::class);
+        $this->authorize('create', Contact::class);
 
         return view('contacts.create', [
             'companies' => Company::query()->orderBy('name')->get(),

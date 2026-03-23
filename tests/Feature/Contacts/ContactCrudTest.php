@@ -56,7 +56,7 @@ class ContactCrudTest extends TestCase
         ])->assertForbidden();
     }
 
-    public function test_user_with_companies_view_permission_can_view_companies_index_and_create_screen(): void
+    public function test_user_with_companies_view_permission_can_view_companies_index(): void
     {
         $user = $this->userWithPermissions(['companies.view']);
         $company = Company::factory()->create(['name' => 'Acme A.S.']);
@@ -67,6 +67,20 @@ class ContactCrudTest extends TestCase
             ->assertSeeText('Sirketler')
             ->assertSeeText('Acme A.S.')
             ->assertSeeText('Yeni Sirket');
+    }
+
+    public function test_user_with_only_companies_view_permission_cannot_open_company_create_screen(): void
+    {
+        $user = $this->userWithPermissions(['companies.view']);
+
+        $this->actingAs($user)
+            ->get('/companies/create')
+            ->assertForbidden();
+    }
+
+    public function test_user_with_companies_create_permission_can_open_company_create_screen(): void
+    {
+        $user = $this->userWithPermissions(['companies.create']);
 
         $this->actingAs($user)
             ->get('/companies/create')
@@ -91,7 +105,7 @@ class ContactCrudTest extends TestCase
         ]);
     }
 
-    public function test_user_with_companies_view_permission_can_view_contacts_index_and_create_screen(): void
+    public function test_user_with_companies_view_permission_can_view_contacts_index(): void
     {
         $user = $this->userWithPermissions(['companies.view']);
         $company = Company::factory()->create(['name' => 'Acme A.S.']);
@@ -109,6 +123,21 @@ class ContactCrudTest extends TestCase
             ->assertSeeText('Ayse Yilmaz')
             ->assertSeeText('Acme A.S.')
             ->assertSeeText('Yeni Kisi');
+    }
+
+    public function test_user_with_only_companies_view_permission_cannot_open_contact_create_screen(): void
+    {
+        $user = $this->userWithPermissions(['companies.view']);
+
+        $this->actingAs($user)
+            ->get('/contacts/create')
+            ->assertForbidden();
+    }
+
+    public function test_user_with_companies_create_permission_can_open_contact_create_screen(): void
+    {
+        $user = $this->userWithPermissions(['companies.create']);
+        Company::factory()->create(['name' => 'Acme A.S.']);
 
         $this->actingAs($user)
             ->get('/contacts/create')

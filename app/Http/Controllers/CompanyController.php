@@ -23,7 +23,7 @@ class CompanyController extends Controller
 
     public function create(): View
     {
-        $this->authorize('viewAny', Company::class);
+        $this->authorize('create', Company::class);
 
         return view('companies.create');
     }
