@@ -31,12 +31,12 @@ npm run build
 php artisan serve
 ```
 
-Detaylı kurulum için: [docs/INSTALL.md](/Users/keremozguven/Projeler/minicrm/.worktrees/codex-mini-crm-mvp/docs/INSTALL.md)
+Detaylı kurulum için: [docs/INSTALL.md](/Users/keremozguven/Projeler/minicrm/docs/INSTALL.md)
 
 ## Demo Giriş
 
-- Admin: `admin@minicrm.local` / `secret123`
-- Satış: `satis@minicrm.local` / `secret123`
+- Admin: `Kullanıcı adı (e-posta): admin@minicrm.local`, `Şifre: secret123`
+- Satış: `Kullanıcı adı (e-posta): satis@minicrm.local`, `Şifre: secret123`
 
 ## Test Komutları
 
