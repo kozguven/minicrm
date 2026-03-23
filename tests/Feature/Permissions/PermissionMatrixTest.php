@@ -4,6 +4,8 @@ namespace Tests\Feature\Permissions;
 
 use App\Models\Company;
 use App\Models\Contact;
+use App\Models\Opportunity;
+use App\Models\OpportunityStage;
 use App\Models\Permission;
 use App\Models\Role;
 use App\Models\User;
@@ -62,5 +64,24 @@ class PermissionMatrixTest extends TestCase
 
         $this->assertTrue(Gate::forUser($user)->allows('viewAny', Contact::class));
         $this->assertTrue(Gate::forUser($user)->allows('create', Contact::class));
+    }
+
+    public function test_opportunity_policy_maps_listing_creation_and_stage_updates_to_expected_permission_keys(): void
+    {
+        $user = User::factory()->create();
+        $role = Role::factory()->create();
+        $opportunity = Opportunity::factory()->create([
+            'opportunity_stage_id' => OpportunityStage::factory()->create()->id,
+        ]);
+        $viewPermission = Permission::factory()->create(['key' => 'companies.view']);
+        $createPermission = Permission::factory()->create(['key' => 'companies.create']);
+        $editPermission = Permission::factory()->create(['key' => 'opportunities.edit']);
+
+        $role->permissions()->attach([$viewPermission->id, $createPermission->id, $editPermission->id]);
+        $user->roles()->attach($role);
+
+        $this->assertTrue(Gate::forUser($user)->allows('viewAny', Opportunity::class));
+        $this->assertTrue(Gate::forUser($user)->allows('create', Opportunity::class));
+        $this->assertTrue(Gate::forUser($user)->allows('update', $opportunity));
     }
 }
