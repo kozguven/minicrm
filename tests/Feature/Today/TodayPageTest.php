@@ -17,6 +17,13 @@ class TodayPageTest extends TestCase
 {
     use RefreshDatabase;
 
+    protected function tearDown(): void
+    {
+        Carbon::setTestNow(null);
+
+        parent::tearDown();
+    }
+
     public function test_guest_is_redirected_to_login(): void
     {
         $this->get('/today')->assertRedirect('/login');
@@ -80,14 +87,10 @@ class TodayPageTest extends TestCase
         $this->actingAs($user)
             ->get('/today')
             ->assertOk()
-            ->assertSeeInOrder([
-                'Aranacak Kişiler',
-                'Kritik Fırsatlar',
-                'Geciken Görevler',
-            ])
-            ->assertSeeText('Bugün için aranacak kişi yok.')
-            ->assertSeeText('Bugün için kritik fırsat yok.')
-            ->assertSeeText('Geciken görev yok.');
+            ->assertSeeText('CRM verilerini görmek için yetki gerekli')
+            ->assertDontSeeText('Aranacak Kişiler')
+            ->assertDontSeeText('Kritik Fırsatlar')
+            ->assertDontSeeText('Geciken Görevler');
     }
 
     /**

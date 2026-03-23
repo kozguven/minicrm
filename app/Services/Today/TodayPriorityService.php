@@ -5,22 +5,15 @@ namespace App\Services\Today;
 use App\Models\Contact;
 use App\Models\CrmTask;
 use App\Models\Opportunity;
-use App\Models\User;
-use App\Services\Permissions\PermissionResolver;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
 
 class TodayPriorityService
 {
-    public function __construct(
-        private readonly PermissionResolver $permissionResolver,
-    ) {
-    }
-
     /**
      * @return list<array{type: string, title: string, empty_message: string, priority: int, items: Collection<int, mixed>}>
      */
-    public function buildFor(User $user): array
+    public function build(): array
     {
         $sections = [
             [
@@ -45,10 +38,6 @@ class TodayPriorityService
                 'items' => collect(),
             ],
         ];
-
-        if (! $this->permissionResolver->can($user, 'companies.view')) {
-            return $sections;
-        }
 
         $today = Carbon::today()->toDateString();
         $now = Carbon::now();
