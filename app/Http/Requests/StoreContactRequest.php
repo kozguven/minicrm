@@ -33,10 +33,26 @@ class StoreContactRequest extends FormRequest
     {
         return [
             'company_id.required' => 'Lutfen bir sirket secin.',
+            'company_id.integer' => 'Sirket secimi sayi olmalidir.',
             'company_id.exists' => 'Lutfen gecerli bir sirket secin.',
-            'first_name.required' => 'Ad alani zorunludur.',
-            'last_name.required' => 'Soyad alani zorunludur.',
-            'email.email' => 'E-posta gecerli bir e-posta adresi olmalidir.',
+            'required' => ':attribute alani zorunludur.',
+            'string' => ':attribute metin olmalidir.',
+            'max.string' => ':attribute en fazla :max karakter olabilir.',
+            'email' => ':attribute gecerli bir e-posta adresi olmalidir.',
+        ];
+    }
+
+    /**
+     * @return array<string, string>
+     */
+    public function attributes(): array
+    {
+        return [
+            'company_id' => 'Sirket',
+            'first_name' => 'Ad',
+            'last_name' => 'Soyad',
+            'email' => 'E-posta',
+            'phone' => 'Telefon',
         ];
     }
 }

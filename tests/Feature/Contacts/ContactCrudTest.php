@@ -2,6 +2,7 @@
 
 namespace Tests\Feature\Contacts;
 
+use App\Http\Requests\StoreContactRequest;
 use App\Models\Company;
 use App\Models\Contact;
 use App\Models\User;
@@ -117,5 +118,52 @@ class ContactCrudTest extends TestCase
             'last_name' => 'Soyad alani zorunludur.',
             'email' => 'E-posta gecerli bir e-posta adresi olmalidir.',
         ]);
+    }
+
+    public function test_contact_create_validation_covers_remaining_contact_rules_in_turkish(): void
+    {
+        $user = User::factory()->create();
+
+        $response = $this->from('/contacts/create')
+            ->actingAs($user)
+            ->post('/contacts', [
+                'company_id' => 'abc',
+                'first_name' => ['Ayse'],
+                'last_name' => str_repeat('Y', 256),
+                'email' => 'gecersiz',
+                'phone' => str_repeat('5', 256),
+            ]);
+
+        $response->assertRedirect('/contacts/create');
+        $response->assertSessionHasErrors([
+            'company_id' => 'Sirket secimi sayi olmalidir.',
+            'first_name' => 'Ad metin olmalidir.',
+            'last_name' => 'Soyad en fazla 255 karakter olabilir.',
+            'email' => 'E-posta gecerli bir e-posta adresi olmalidir.',
+            'phone' => 'Telefon en fazla 255 karakter olabilir.',
+        ]);
+    }
+
+    public function test_contact_request_declares_complete_turkish_message_and_attribute_coverage(): void
+    {
+        $request = new StoreContactRequest();
+
+        $this->assertSame([
+            'company_id.required' => 'Lutfen bir sirket secin.',
+            'company_id.integer' => 'Sirket secimi sayi olmalidir.',
+            'company_id.exists' => 'Lutfen gecerli bir sirket secin.',
+            'required' => ':attribute alani zorunludur.',
+            'string' => ':attribute metin olmalidir.',
+            'max.string' => ':attribute en fazla :max karakter olabilir.',
+            'email' => ':attribute gecerli bir e-posta adresi olmalidir.',
+        ], $request->messages());
+
+        $this->assertSame([
+            'company_id' => 'Sirket',
+            'first_name' => 'Ad',
+            'last_name' => 'Soyad',
+            'email' => 'E-posta',
+            'phone' => 'Telefon',
+        ], $request->attributes());
     }
 }
