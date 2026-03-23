@@ -71,8 +71,7 @@ class DealController extends Controller
         ConvertOpportunityToDealRequest $request,
         Opportunity $opportunity,
         AuditLogger $auditLogger,
-    ): RedirectResponse
-    {
+    ): RedirectResponse {
         $deal = $this->createDealForOpportunity($opportunity, $opportunity->value, now());
 
         $auditLogger->log(

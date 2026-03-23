@@ -61,3 +61,10 @@ Kurulum sonrası hızlı kontrol:
 ```bash
 php artisan test --filter=SmokeInstallFlowTest
 ```
+
+Tam kalite kontrol:
+
+```bash
+php artisan test
+./vendor/bin/pint --test
+```

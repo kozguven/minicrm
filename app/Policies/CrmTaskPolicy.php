@@ -10,8 +10,7 @@ class CrmTaskPolicy
 {
     public function __construct(
         private readonly PermissionResolver $permissionResolver,
-    ) {
-    }
+    ) {}
 
     public function viewAny(User $user): bool
     {

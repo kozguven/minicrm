@@ -13,8 +13,7 @@ class TodayController extends Controller
         Request $request,
         TodayPriorityService $todayPriorityService,
         PermissionResolver $permissionResolver,
-    ): View
-    {
+    ): View {
         $canViewCrm = $permissionResolver->can($request->user(), 'companies.view');
 
         return view('today.index', [

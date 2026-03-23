@@ -84,8 +84,7 @@ class RoleController extends Controller
         array $permissionKeys,
         ?int $userId,
         AuditLogger $auditLogger,
-    ): void
-    {
+    ): void {
         $normalizedKeys = collect($permissionKeys)
             ->unique()
             ->sort()

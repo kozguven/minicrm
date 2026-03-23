@@ -9,6 +9,7 @@
                     <h1 style="margin: 0 0 0.35rem; font-size: 1.75rem;">Today</h1>
                     <p class="muted" style="margin: 0;">Gunum icin once hangi isi ele almaniz gerektigini tek ekranda gorun.</p>
                 </div>
+                <a class="button" href="/dashboard">Dashboard</a>
             </div>
 
             @if (session('status'))

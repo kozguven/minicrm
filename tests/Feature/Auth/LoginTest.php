@@ -90,6 +90,6 @@ class LoginTest extends TestCase
     {
         $user = User::factory()->create();
 
-        $this->actingAs($user)->get('/login')->assertRedirect('/');
+        $this->actingAs($user)->get('/login')->assertRedirect('/today');
     }
 }

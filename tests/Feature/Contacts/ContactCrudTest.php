@@ -218,7 +218,7 @@ class ContactCrudTest extends TestCase
 
     public function test_contact_request_declares_complete_turkish_message_and_attribute_coverage(): void
     {
-        $request = new StoreContactRequest();
+        $request = new StoreContactRequest;
 
         $this->assertSame([
             'company_id.required' => 'Lutfen bir sirket secin.',
