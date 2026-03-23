@@ -53,7 +53,7 @@ class TaskReminderTest extends TestCase
             ->assertOk()
             ->assertSeeText('Gorevler')
             ->assertSeeText('Musteriyi ara')
-            ->assertSeeText('Gecikmis')
+            ->assertSeeText('Gecikmiş')
             ->assertSeeText($overdueTask->opportunity->title)
             ->assertDontSeeText('Yeni Gorev');
     }

@@ -27,7 +27,7 @@
                     @foreach ($tasks as $task)
                         @php
                             $isOverdue = $task->completed_at === null && $task->due_at !== null && $task->due_at->isPast();
-                            $badgeText = $task->completed_at ? 'Tamamlandi' : ($isOverdue ? 'Gecikmis' : 'Planlandi');
+                            $badgeText = $task->completed_at ? 'Tamamlandi' : ($isOverdue ? 'Gecikmiş' : 'Planlandi');
                             $badgeBackground = $task->completed_at ? '#ecfdf5' : ($isOverdue ? '#fef2f2' : '#eff6ff');
                             $badgeColor = $task->completed_at ? '#065f46' : ($isOverdue ? '#b91c1c' : '#1d4ed8');
                         @endphp
