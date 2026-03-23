@@ -6,6 +6,7 @@ use App\Http\Requests\StoreRoleRequest;
 use App\Http\Requests\UpdateRoleRequest;
 use App\Models\Permission;
 use App\Models\Role;
+use App\Services\Audit\AuditLogger;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
@@ -30,14 +31,19 @@ class RoleController extends Controller
         ]);
     }
 
-    public function store(StoreRoleRequest $request): RedirectResponse
+    public function store(StoreRoleRequest $request, AuditLogger $auditLogger): RedirectResponse
     {
         $validated = $request->validated();
         $role = Role::query()->create([
             'name' => $validated['name'],
         ]);
 
-        $this->syncPermissions($role, $validated['permissions'] ?? []);
+        $this->syncPermissions(
+            role: $role,
+            permissionKeys: $validated['permissions'] ?? [],
+            userId: $request->user()?->id,
+            auditLogger: $auditLogger,
+        );
 
         return redirect('/roles');
     }
@@ -52,7 +58,7 @@ class RoleController extends Controller
         ]);
     }
 
-    public function update(UpdateRoleRequest $request, Role $role): RedirectResponse
+    public function update(UpdateRoleRequest $request, Role $role, AuditLogger $auditLogger): RedirectResponse
     {
         $validated = $request->validated();
 
@@ -60,7 +66,12 @@ class RoleController extends Controller
             'name' => $validated['name'],
         ]);
 
-        $this->syncPermissions($role, $validated['permissions'] ?? []);
+        $this->syncPermissions(
+            role: $role,
+            permissionKeys: $validated['permissions'] ?? [],
+            userId: $request->user()?->id,
+            auditLogger: $auditLogger,
+        );
 
         return redirect('/roles');
     }
@@ -68,13 +79,32 @@ class RoleController extends Controller
     /**
      * @param  list<string>  $permissionKeys
      */
-    private function syncPermissions(Role $role, array $permissionKeys): void
+    private function syncPermissions(
+        Role $role,
+        array $permissionKeys,
+        ?int $userId,
+        AuditLogger $auditLogger,
+    ): void
     {
+        $normalizedKeys = collect($permissionKeys)
+            ->unique()
+            ->sort()
+            ->values()
+            ->all();
+
         $permissionIds = Permission::query()
-            ->whereIn('key', $permissionKeys)
+            ->whereIn('key', $normalizedKeys)
             ->pluck('id');
 
         $role->permissions()->sync($permissionIds);
+
+        $auditLogger->log(
+            userId: $userId,
+            entityType: Role::class,
+            entityId: $role->id,
+            action: 'permissions_synced',
+            payload: ['permission_keys' => $normalizedKeys],
+        );
     }
 
     private function ensureAdmin(Request $request): void

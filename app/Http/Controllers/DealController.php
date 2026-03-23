@@ -6,6 +6,7 @@ use App\Http\Requests\ConvertOpportunityToDealRequest;
 use App\Http\Requests\StoreDealRequest;
 use App\Models\Deal;
 use App\Models\Opportunity;
+use App\Services\Audit\AuditLogger;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -40,23 +41,51 @@ class DealController extends Controller
         ]);
     }
 
-    public function store(StoreDealRequest $request): RedirectResponse
+    public function store(StoreDealRequest $request, AuditLogger $auditLogger): RedirectResponse
     {
         $validated = $request->validated();
         $opportunity = Opportunity::query()->findOrFail($validated['opportunity_id']);
 
-        $this->createDealForOpportunity(
+        $deal = $this->createDealForOpportunity(
             $opportunity,
             $validated['amount'] ?? null,
             $validated['closed_at'] ?? null,
         );
 
+        $auditLogger->log(
+            userId: $request->user()?->id,
+            entityType: Deal::class,
+            entityId: $deal->id,
+            action: 'deal_created',
+            payload: [
+                'source' => 'create',
+                'opportunity_id' => $opportunity->id,
+                'amount' => $this->normalizeAmountForAudit($validated['amount'] ?? null),
+            ],
+        );
+
         return $this->successRedirect($request, 'Anlasma kaydedildi.');
     }
 
-    public function convert(ConvertOpportunityToDealRequest $request, Opportunity $opportunity): RedirectResponse
+    public function convert(
+        ConvertOpportunityToDealRequest $request,
+        Opportunity $opportunity,
+        AuditLogger $auditLogger,
+    ): RedirectResponse
     {
-        $this->createDealForOpportunity($opportunity, $opportunity->value, now());
+        $deal = $this->createDealForOpportunity($opportunity, $opportunity->value, now());
+
+        $auditLogger->log(
+            userId: $request->user()?->id,
+            entityType: Deal::class,
+            entityId: $deal->id,
+            action: 'deal_created',
+            payload: [
+                'source' => 'convert',
+                'opportunity_id' => $opportunity->id,
+                'amount' => $this->normalizeAmountForAudit($opportunity->value),
+            ],
+        );
 
         return $this->successRedirect($request, 'Firsat anlasmaya donusturuldu.');
     }
@@ -90,5 +119,18 @@ class DealController extends Controller
                 'closed_at' => $closedAt,
             ]);
         });
+    }
+
+    private function normalizeAmountForAudit(mixed $amount): mixed
+    {
+        if ($amount === null || ! is_numeric($amount)) {
+            return null;
+        }
+
+        $numeric = (float) $amount;
+
+        return fmod($numeric, 1.0) === 0.0
+            ? (int) $numeric
+            : $numeric;
     }
 }
