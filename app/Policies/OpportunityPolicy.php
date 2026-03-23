@@ -17,6 +17,11 @@ class OpportunityPolicy
         return $this->permissionResolver->can($user, 'companies.view');
     }
 
+    public function view(User $user, Opportunity $opportunity): bool
+    {
+        return $this->permissionResolver->can($user, 'companies.view');
+    }
+
     public function create(User $user): bool
     {
         return $this->permissionResolver->can($user, 'companies.create');

@@ -13,6 +13,25 @@
                 @endcan
             </x-ui.page-header>
 
+            <form method="GET" action="{{ url('/deals') }}" class="inline-actions">
+                <div class="field" style="flex: 1 1 320px;">
+                    <label class="field-label" for="deal-search">Arama</label>
+                    <input
+                        class="input"
+                        id="deal-search"
+                        name="q"
+                        type="text"
+                        value="{{ $filters['q'] }}"
+                        placeholder="Anlaşma, fırsat, kişi veya şirket ara"
+                    >
+                </div>
+
+                <button class="btn btn-secondary" type="submit">Uygula</button>
+                @if ($filters['q'] !== '')
+                    <a class="btn btn-ghost" href="{{ url('/deals') }}">Temizle</a>
+                @endif
+            </form>
+
             @if (session('status'))
                 <x-ui.notice tone="success">{{ session('status') }}</x-ui.notice>
             @endif
@@ -51,6 +70,9 @@
                                         @endif
                                     </strong>
                                     <p class="muted">{{ optional($deal->closed_at)->format('d.m.Y H:i') ?: 'Kapanış bekleniyor' }}</p>
+                                    <div style="margin-top: 0.45rem;">
+                                        <a class="btn btn-ghost" href="{{ url("/deals/{$deal->id}") }}">Detay</a>
+                                    </div>
                                 </div>
                             </div>
                         </article>

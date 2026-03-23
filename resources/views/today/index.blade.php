@@ -49,6 +49,7 @@
                                                         </div>
                                                         <p class="muted">{{ $item->company?->name ?: 'Şirket bilgisi yok' }}</p>
                                                         <p class="muted">{{ $todayOpportunity?->title ?: 'Bugünlük fırsat bulunmuyor' }}</p>
+                                                        <a class="btn btn-ghost" href="{{ url("/contacts/{$item->id}") }}">Kişi Detayı</a>
                                                     </div>
                                                 @elseif ($section['type'] === 'critical_opportunity')
                                                     <div class="surface-stack" style="gap: 0.35rem;">
@@ -63,6 +64,7 @@
                                                             @endif
                                                         </p>
                                                         <p class="muted">Aşama: {{ $item->opportunityStage?->name ?: 'Belirsiz' }}</p>
+                                                        <a class="btn btn-ghost" href="{{ url("/opportunities/{$item->id}") }}">Fırsat Detayı</a>
                                                     </div>
                                                 @else
                                                     <div class="surface-stack" style="gap: 0.35rem;">
@@ -77,6 +79,20 @@
                                                                 · {{ $item->opportunity->contact->company->name }}
                                                             @endif
                                                         </p>
+
+                                                        @can('update', $item)
+                                                            <div class="inline-actions">
+                                                                <a class="btn btn-ghost" href="{{ url("/tasks/{$item->id}") }}">Görev Detayı</a>
+
+                                                                <form method="POST" action="{{ url("/tasks/{$item->id}/toggle-complete") }}">
+                                                                    @csrf
+                                                                    @method('PATCH')
+                                                                    <button class="btn btn-secondary" type="submit">Tamamlandı Olarak İşaretle</button>
+                                                                </form>
+                                                            </div>
+                                                        @else
+                                                            <a class="btn btn-ghost" href="{{ url("/tasks/{$item->id}") }}">Görev Detayı</a>
+                                                        @endcan
                                                     </div>
                                                 @endif
                                             </article>

@@ -69,6 +69,26 @@ class ContactCrudTest extends TestCase
             ->assertSeeText('Yeni Şirket');
     }
 
+    public function test_companies_index_supports_search_by_name_or_website(): void
+    {
+        $user = $this->userWithPermissions(['companies.view']);
+
+        Company::factory()->create([
+            'name' => 'Atlas Lojistik',
+            'website' => 'https://atlas.test',
+        ]);
+        Company::factory()->create([
+            'name' => 'Pera Yazilim',
+            'website' => 'https://pera.test',
+        ]);
+
+        $this->actingAs($user)
+            ->get('/companies?q=atlas')
+            ->assertOk()
+            ->assertSeeText('Atlas Lojistik')
+            ->assertDontSeeText('Pera Yazilim');
+    }
+
     public function test_user_with_only_companies_view_permission_cannot_open_company_create_screen(): void
     {
         $user = $this->userWithPermissions(['companies.view']);
@@ -123,6 +143,34 @@ class ContactCrudTest extends TestCase
             ->assertSeeText('Ayse Yilmaz')
             ->assertSeeText('Acme A.S.')
             ->assertSeeText('Yeni Kişi');
+    }
+
+    public function test_contacts_index_supports_search_by_contact_or_company_fields(): void
+    {
+        $user = $this->userWithPermissions(['companies.view']);
+        $atlas = Company::factory()->create(['name' => 'Atlas Lojistik']);
+        $pera = Company::factory()->create(['name' => 'Pera Yazilim']);
+
+        Contact::factory()->create([
+            'company_id' => $atlas->id,
+            'first_name' => 'Ayse',
+            'last_name' => 'Yildiz',
+            'email' => 'ayse@atlas.test',
+            'phone' => '+90 555 111 22 33',
+        ]);
+        Contact::factory()->create([
+            'company_id' => $pera->id,
+            'first_name' => 'Mert',
+            'last_name' => 'Kaya',
+            'email' => 'mert@pera.test',
+            'phone' => '+90 555 444 55 66',
+        ]);
+
+        $this->actingAs($user)
+            ->get('/contacts?q=atlas')
+            ->assertOk()
+            ->assertSeeText('Ayse Yildiz')
+            ->assertDontSeeText('Mert Kaya');
     }
 
     public function test_user_with_only_companies_view_permission_cannot_open_contact_create_screen(): void

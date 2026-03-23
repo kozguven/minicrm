@@ -93,6 +93,31 @@ class TodayPageTest extends TestCase
             ->assertDontSeeText('Geciken Görevler');
     }
 
+    public function test_user_can_mark_overdue_task_as_completed_from_today_page(): void
+    {
+        Carbon::setTestNow('2026-03-23 10:00:00');
+
+        $user = $this->userWithPermissions(['companies.view', 'companies.create']);
+        $task = CrmTask::factory()->create([
+            'title' => 'Bugun tamamlanacak gorev',
+            'due_at' => Carbon::parse('2026-03-22 11:00:00'),
+            'completed_at' => null,
+        ]);
+
+        $this->from('/today')
+            ->actingAs($user)
+            ->patch("/tasks/{$task->id}/toggle-complete")
+            ->assertRedirect('/today');
+
+        $this->assertNotNull($task->fresh()->completed_at);
+
+        $this->actingAs($user)
+            ->get('/today')
+            ->assertOk()
+            ->assertSeeText('Gorev tamamlandi.')
+            ->assertDontSeeText('Bugun tamamlanacak gorev');
+    }
+
     /**
      * @param  list<string>  $permissionKeys
      */

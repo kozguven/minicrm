@@ -13,6 +13,25 @@
                 @endcan
             </x-ui.page-header>
 
+            <form method="GET" action="{{ url('/opportunities') }}" class="inline-actions">
+                <div class="field" style="flex: 1 1 320px;">
+                    <label class="field-label" for="opportunity-search">Arama</label>
+                    <input
+                        class="input"
+                        id="opportunity-search"
+                        name="q"
+                        type="text"
+                        value="{{ $filters['q'] }}"
+                        placeholder="Fırsat, kişi, şirket veya aşama ara"
+                    >
+                </div>
+
+                <button class="btn btn-secondary" type="submit">Uygula</button>
+                @if ($filters['q'] !== '')
+                    <a class="btn btn-ghost" href="{{ url('/opportunities') }}">Temizle</a>
+                @endif
+            </form>
+
             @if ($errors->any())
                 <x-ui.notice tone="danger">
                     @foreach ($errors->all() as $error)
@@ -41,6 +60,9 @@
                                     <div class="text-right">
                                         <p class="muted">{{ $opportunity->opportunityStage?->name }}</p>
                                         <strong>{{ number_format((float) $opportunity->value, 2, ',', '.') }} TL</strong>
+                                        <div style="margin-top: 0.45rem;">
+                                            <a class="btn btn-ghost" href="{{ url("/opportunities/{$opportunity->id}") }}">Detay</a>
+                                        </div>
                                     </div>
                                 </div>
 

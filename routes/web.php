@@ -23,25 +23,31 @@ Route::middleware('auth')->group(function () {
 
     Route::get('/companies', [CompanyController::class, 'index']);
     Route::get('/companies/create', [CompanyController::class, 'create']);
+    Route::get('/companies/{company}', [CompanyController::class, 'show']);
     Route::post('/companies', [CompanyController::class, 'store']);
 
     Route::get('/contacts', [ContactController::class, 'index']);
     Route::get('/contacts/create', [ContactController::class, 'create']);
+    Route::get('/contacts/{contact}', [ContactController::class, 'show']);
     Route::post('/contacts', [ContactController::class, 'store']);
 
     Route::get('/opportunities', [OpportunityController::class, 'index']);
     Route::get('/opportunities/create', [OpportunityController::class, 'create']);
+    Route::get('/opportunities/{opportunity}', [OpportunityController::class, 'show']);
     Route::post('/opportunities', [OpportunityController::class, 'store']);
     Route::patch('/opportunities/{opportunity}/stage', [OpportunityController::class, 'updateStage']);
     Route::post('/opportunities/{opportunity}/convert', [DealController::class, 'convert']);
 
     Route::get('/deals', [DealController::class, 'index']);
     Route::get('/deals/create', [DealController::class, 'create']);
+    Route::get('/deals/{deal}', [DealController::class, 'show']);
     Route::post('/deals', [DealController::class, 'store']);
 
     Route::get('/tasks', [CrmTaskController::class, 'index']);
     Route::get('/tasks/create', [CrmTaskController::class, 'create']);
+    Route::get('/tasks/{crmTask}', [CrmTaskController::class, 'show']);
     Route::post('/tasks', [CrmTaskController::class, 'store']);
+    Route::patch('/tasks/{crmTask}/toggle-complete', [CrmTaskController::class, 'toggleComplete']);
 
     Route::get('/team', [TeamController::class, 'index']);
     Route::get('/team/create', [TeamController::class, 'create']);

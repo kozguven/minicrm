@@ -2,6 +2,7 @@
 
 namespace Tests\Feature\Deals;
 
+use App\Models\Company;
 use App\Models\Contact;
 use App\Models\Deal;
 use App\Models\Opportunity;
@@ -65,6 +66,40 @@ class DealConversionTest extends TestCase
             ->assertSeeText('Mini CRM Yenileme')
             ->assertSeeText('Ayse Yilmaz')
             ->assertDontSeeText('Yeni Anlaşma');
+    }
+
+    public function test_deals_index_supports_search_by_opportunity_contact_and_company(): void
+    {
+        $user = $this->userWithPermissions(['companies.view']);
+
+        $atlasContact = Contact::factory()->create([
+            'first_name' => 'Ayse',
+            'last_name' => 'Yildiz',
+            'company_id' => Company::factory()->create(['name' => 'Atlas Lojistik'])->id,
+        ]);
+        $otherContact = Contact::factory()->create([
+            'first_name' => 'Mert',
+            'last_name' => 'Kaya',
+            'company_id' => Company::factory()->create(['name' => 'Pera Yazilim'])->id,
+        ]);
+
+        $atlasOpportunity = Opportunity::factory()->create([
+            'contact_id' => $atlasContact->id,
+            'title' => 'Atlas Yenileme Paketi',
+        ]);
+        $otherOpportunity = Opportunity::factory()->create([
+            'contact_id' => $otherContact->id,
+            'title' => 'Pera Danismanlik Paketi',
+        ]);
+
+        Deal::factory()->create(['opportunity_id' => $atlasOpportunity->id]);
+        Deal::factory()->create(['opportunity_id' => $otherOpportunity->id]);
+
+        $this->actingAs($user)
+            ->get('/deals?q=atlas')
+            ->assertOk()
+            ->assertSeeText('Atlas Yenileme Paketi')
+            ->assertDontSeeText('Pera Danismanlik Paketi');
     }
 
     public function test_user_with_companies_view_and_create_permissions_can_open_deal_create_screen(): void

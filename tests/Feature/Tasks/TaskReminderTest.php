@@ -16,6 +16,8 @@ class TaskReminderTest extends TestCase
 
     public function test_guest_cannot_access_task_flows(): void
     {
+        $task = CrmTask::factory()->create();
+
         $this->get('/tasks')->assertRedirect('/login');
         $this->get('/tasks/create')->assertRedirect('/login');
         $this->post('/tasks', [
@@ -23,6 +25,7 @@ class TaskReminderTest extends TestCase
             'title' => 'Mini CRM follow-up',
             'due_at' => now()->addDay()->format('Y-m-d\TH:i'),
         ])->assertRedirect('/login');
+        $this->patch("/tasks/{$task->id}/toggle-complete")->assertRedirect('/login');
     }
 
     public function test_authenticated_user_without_matching_permissions_cannot_access_task_flows(): void
@@ -159,6 +162,93 @@ class TaskReminderTest extends TestCase
             'title' => 'Gorev basligi alani zorunludur.',
             'due_at' => 'Termin gecerli bir tarih olmalidir.',
         ]);
+    }
+
+    public function test_user_with_companies_view_and_create_permissions_can_toggle_task_completion(): void
+    {
+        $user = $this->userWithPermissions(['companies.view', 'companies.create']);
+        $task = CrmTask::factory()->create([
+            'completed_at' => null,
+        ]);
+
+        $this->followingRedirects()
+            ->actingAs($user)
+            ->patch("/tasks/{$task->id}/toggle-complete")
+            ->assertOk()
+            ->assertSeeText('Gorev tamamlandi.');
+
+        $this->assertDatabaseHas('crm_tasks', [
+            'id' => $task->id,
+        ]);
+        $this->assertNotNull($task->fresh()->completed_at);
+
+        $this->followingRedirects()
+            ->actingAs($user)
+            ->patch("/tasks/{$task->id}/toggle-complete")
+            ->assertOk()
+            ->assertSeeText('Gorev tekrar acildi.');
+
+        $this->assertNull($task->fresh()->completed_at);
+    }
+
+    public function test_user_without_matching_permissions_cannot_toggle_task_completion(): void
+    {
+        $task = CrmTask::factory()->create([
+            'completed_at' => null,
+        ]);
+
+        $this->actingAs(User::factory()->create())
+            ->patch("/tasks/{$task->id}/toggle-complete")
+            ->assertForbidden();
+
+        $this->assertNull($task->fresh()->completed_at);
+    }
+
+    public function test_task_index_can_filter_by_status_and_search_keyword(): void
+    {
+        $user = $this->userWithPermissions(['companies.view']);
+
+        $matchingOpportunity = Opportunity::factory()->create([
+            'title' => 'Kritik Demo Toplantisi',
+        ]);
+
+        $matchingTask = CrmTask::factory()->create([
+            'opportunity_id' => $matchingOpportunity->id,
+            'title' => 'Demo sunumu hazirla',
+            'completed_at' => null,
+        ]);
+
+        $completedTask = CrmTask::factory()->create([
+            'title' => 'Tamamlanmis gorev',
+            'completed_at' => now(),
+        ]);
+
+        $overdueTask = CrmTask::factory()->create([
+            'title' => 'Gecikmis gorev',
+            'due_at' => now()->subHour(),
+            'completed_at' => null,
+        ]);
+
+        $this->actingAs($user)
+            ->get('/tasks?status=completed')
+            ->assertOk()
+            ->assertSeeText('Tamamlanmis gorev')
+            ->assertDontSeeText($matchingTask->title)
+            ->assertDontSeeText($overdueTask->title);
+
+        $this->actingAs($user)
+            ->get('/tasks?status=overdue')
+            ->assertOk()
+            ->assertSeeText('Gecikmis gorev')
+            ->assertDontSeeText($matchingTask->title)
+            ->assertDontSeeText($completedTask->title);
+
+        $this->actingAs($user)
+            ->get('/tasks?q=demo')
+            ->assertOk()
+            ->assertSeeText($matchingTask->title)
+            ->assertSeeText('Kritik Demo Toplantisi')
+            ->assertDontSeeText($completedTask->title);
     }
 
     /**

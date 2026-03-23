@@ -2,6 +2,7 @@
 
 namespace Tests\Feature\Opportunities;
 
+use App\Models\Company;
 use App\Models\Contact;
 use App\Models\Opportunity;
 use App\Models\OpportunityStage;
@@ -75,6 +76,40 @@ class OpportunityStageTransitionTest extends TestCase
             ->assertSeeText('Ayse Yilmaz')
             ->assertSeeText('Gorusme')
             ->assertDontSeeText('Yeni Fırsat');
+    }
+
+    public function test_opportunities_index_supports_search_by_opportunity_contact_and_company(): void
+    {
+        $user = $this->userWithPermissions(['companies.view']);
+        $stage = OpportunityStage::factory()->create(['name' => 'Teklif', 'position' => 1]);
+
+        $atlasContact = Contact::factory()->create([
+            'first_name' => 'Ayse',
+            'last_name' => 'Yildiz',
+            'company_id' => Company::factory()->create(['name' => 'Atlas Lojistik'])->id,
+        ]);
+        $otherContact = Contact::factory()->create([
+            'first_name' => 'Mert',
+            'last_name' => 'Kaya',
+            'company_id' => Company::factory()->create(['name' => 'Pera Yazilim'])->id,
+        ]);
+
+        Opportunity::factory()->create([
+            'contact_id' => $atlasContact->id,
+            'opportunity_stage_id' => $stage->id,
+            'title' => 'Atlas Yenileme Paketi',
+        ]);
+        Opportunity::factory()->create([
+            'contact_id' => $otherContact->id,
+            'opportunity_stage_id' => $stage->id,
+            'title' => 'Pera Danismanlik Paketi',
+        ]);
+
+        $this->actingAs($user)
+            ->get('/opportunities?q=atlas')
+            ->assertOk()
+            ->assertSeeText('Atlas Yenileme Paketi')
+            ->assertDontSeeText('Pera Danismanlik Paketi');
     }
 
     public function test_user_with_companies_view_and_create_permissions_sees_opportunity_create_cta_on_index(): void

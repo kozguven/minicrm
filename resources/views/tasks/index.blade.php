@@ -17,6 +17,35 @@
                 <x-ui.notice tone="success">{{ session('status') }}</x-ui.notice>
             @endif
 
+            <form method="GET" action="{{ url('/tasks') }}" class="inline-actions">
+                <div class="field" style="flex: 1 1 240px;">
+                    <label class="field-label" for="task-search">Arama</label>
+                    <input
+                        class="input"
+                        id="task-search"
+                        name="q"
+                        type="text"
+                        value="{{ $filters['q'] }}"
+                        placeholder="Görev, fırsat, kişi veya şirket ara"
+                    >
+                </div>
+
+                <div class="field" style="flex: 1 1 180px;">
+                    <label class="field-label" for="task-status">Durum</label>
+                    <select class="select" id="task-status" name="status">
+                        <option value="all" @selected($filters['status'] === 'all')>Tümü</option>
+                        <option value="open" @selected($filters['status'] === 'open')>Açık</option>
+                        <option value="overdue" @selected($filters['status'] === 'overdue')>Gecikmiş</option>
+                        <option value="completed" @selected($filters['status'] === 'completed')>Tamamlandı</option>
+                    </select>
+                </div>
+
+                <button class="btn btn-secondary" type="submit">Uygula</button>
+                @if ($filters['q'] !== '' || $filters['status'] !== 'all')
+                    <a class="btn btn-ghost" href="{{ url('/tasks') }}">Temizle</a>
+                @endif
+            </form>
+
             @if ($tasks->isEmpty())
                 <x-ui.empty-state>Henüz görev kaydı bulunmuyor.</x-ui.empty-state>
             @else
@@ -50,6 +79,22 @@
                                 <p class="muted">
                                     Termin: {{ $task->due_at?->format('d.m.Y H:i') ?? 'Belirlenmedi' }}
                                 </p>
+
+                                @can('update', $task)
+                                    <div class="inline-actions">
+                                        <a class="btn btn-ghost" href="{{ url("/tasks/{$task->id}") }}">Detay</a>
+
+                                        <form method="POST" action="{{ url("/tasks/{$task->id}/toggle-complete") }}">
+                                            @csrf
+                                            @method('PATCH')
+                                            <button class="btn btn-secondary" type="submit">
+                                                {{ $task->completed_at ? 'Tekrar Aç' : 'Tamamlandı Olarak İşaretle' }}
+                                            </button>
+                                        </form>
+                                    </div>
+                                @else
+                                    <a class="btn btn-ghost" href="{{ url("/tasks/{$task->id}") }}">Detay</a>
+                                @endcan
                             </div>
                         </article>
                     @endforeach

@@ -27,4 +27,10 @@ class CrmTaskPolicy
         return $this->permissionResolver->can($user, 'companies.view')
             && $this->permissionResolver->can($user, 'companies.create');
     }
+
+    public function update(User $user, CrmTask $crmTask): bool
+    {
+        return $this->permissionResolver->can($user, 'companies.view')
+            && $this->permissionResolver->can($user, 'companies.create');
+    }
 }

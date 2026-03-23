@@ -15,16 +15,36 @@ use Illuminate\View\View;
 
 class DealController extends Controller
 {
-    public function index(): View
+    public function index(Request $request): View
     {
         $this->authorize('viewAny', Deal::class);
+
+        $search = trim((string) $request->query('q', ''));
 
         return view('deals.index', [
             'deals' => Deal::query()
                 ->with(['opportunity.contact.company'])
+                ->when($search !== '', function ($query) use ($search): void {
+                    $like = "%{$search}%";
+
+                    $query->whereHas('opportunity', function ($opportunityQuery) use ($like): void {
+                        $opportunityQuery
+                            ->where('title', 'like', $like)
+                            ->orWhereHas('contact', function ($contactQuery) use ($like): void {
+                                $contactQuery
+                                    ->where('first_name', 'like', $like)
+                                    ->orWhere('last_name', 'like', $like)
+                                    ->orWhereHas('company', fn ($companyQuery) => $companyQuery
+                                        ->where('name', 'like', $like));
+                            });
+                    });
+                })
                 ->orderByDesc('closed_at')
                 ->orderByDesc('id')
                 ->get(),
+            'filters' => [
+                'q' => $search,
+            ],
         ]);
     }
 
@@ -38,6 +58,18 @@ class DealController extends Controller
                 ->whereDoesntHave('deal')
                 ->orderBy('title')
                 ->get(),
+        ]);
+    }
+
+    public function show(Deal $deal): View
+    {
+        $this->authorize('view', $deal);
+
+        return view('deals.show', [
+            'deal' => $deal->load([
+                'opportunity.contact.company',
+                'opportunity.opportunityStage',
+            ]),
         ]);
     }
 
