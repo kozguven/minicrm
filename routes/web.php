@@ -4,6 +4,7 @@ use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\CompanyController;
 use App\Http\Controllers\ContactController;
 use App\Http\Controllers\CrmTaskController;
+use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\DealController;
 use App\Http\Controllers\OpportunityController;
 use App\Http\Controllers\RoleController;
@@ -14,6 +15,7 @@ use Illuminate\Support\Facades\Route;
 Route::redirect('/', '/today');
 
 Route::middleware('auth')->group(function () {
+    Route::get('/dashboard', DashboardController::class);
     Route::get('/today', TodayController::class);
 
     Route::resource('roles', RoleController::class)
