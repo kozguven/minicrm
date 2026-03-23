@@ -74,6 +74,16 @@ class OpportunityStageTransitionTest extends TestCase
             ->assertSeeText('Mini CRM Retainer')
             ->assertSeeText('Ayse Yilmaz')
             ->assertSeeText('Gorusme')
+            ->assertDontSeeText('Yeni Firsat');
+    }
+
+    public function test_user_with_companies_view_and_create_permissions_sees_opportunity_create_cta_on_index(): void
+    {
+        $user = $this->userWithPermissions(['companies.view', 'companies.create']);
+
+        $this->actingAs($user)
+            ->get('/opportunities')
+            ->assertOk()
             ->assertSeeText('Yeni Firsat');
     }
 

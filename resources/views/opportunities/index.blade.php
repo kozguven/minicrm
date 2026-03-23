@@ -9,7 +9,9 @@
                     <h1 style="margin: 0 0 0.35rem; font-size: 1.75rem;">Firsatlar</h1>
                     <p class="muted" style="margin: 0;">Potansiyel satislari asama bazli takip edin ve boru hattini guncel tutun.</p>
                 </div>
-                <a class="button" href="{{ url('/opportunities/create') }}">Yeni Firsat</a>
+                @can('create', \App\Models\Opportunity::class)
+                    <a class="button" href="{{ url('/opportunities/create') }}">Yeni Firsat</a>
+                @endcan
             </div>
 
             @if ($opportunities->isEmpty())
