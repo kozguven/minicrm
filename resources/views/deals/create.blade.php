@@ -1,42 +1,37 @@
 @extends('layouts.app')
 
 @section('content')
-    <section class="card" style="width: min(100%, 640px);">
-        <div class="stack">
-            <div>
-                <p class="muted" style="margin: 0 0 0.35rem; font-weight: 600;">CRM &gt; Anlasmalar</p>
-                <h1 style="margin: 0 0 0.35rem; font-size: 1.75rem;">Yeni Anlasma</h1>
-                <p class="muted" style="margin: 0;">Firsati secin, kapanis tutarini girin ve anlasmayi kaydedin.</p>
-            </div>
+    <x-ui.panel size="md">
+        <div class="surface-stack">
+            <x-ui.page-header
+                eyebrow="CRM / Anlaşmalar"
+                title="Yeni Anlaşma"
+                subtitle="Fırsatı seçin, kapanış tutarını girin ve anlaşmayı kaydedin."
+            />
 
             @if ($errors->any())
-                <div class="error">
+                <x-ui.notice tone="danger">
                     @foreach ($errors->all() as $error)
                         <div>{{ $error }}</div>
                     @endforeach
-                </div>
+                </x-ui.notice>
             @endif
 
             @if ($opportunities->isEmpty())
-                <p class="muted" style="margin: 0;">Anlasmaya donusturulecek uygun firsat bulunmuyor.</p>
+                <x-ui.empty-state>Anlaşmaya dönüştürülecek uygun fırsat bulunmuyor.</x-ui.empty-state>
 
-                <div style="display: flex; gap: 0.75rem; flex-wrap: wrap;">
-                    <a class="button" href="{{ url('/deals') }}">Anlasmalara Don</a>
-                    <a class="button" href="{{ url('/opportunities') }}" style="background: #e5e7eb; color: var(--text);">Firsatlara Git</a>
+                <div class="inline-actions">
+                    <a class="btn btn-primary" href="{{ url('/deals') }}">Anlaşmalara Dön</a>
+                    <a class="btn btn-secondary" href="{{ url('/opportunities') }}">Fırsatlara Git</a>
                 </div>
             @else
-                <form method="POST" action="{{ url('/deals') }}" class="stack">
+                <form method="POST" action="{{ url('/deals') }}" class="form-stack">
                     @csrf
 
-                    <div>
-                        <label for="opportunity_id">Firsat</label>
-                        <select
-                            id="opportunity_id"
-                            name="opportunity_id"
-                            required
-                            style="width: 100%; border: 1px solid var(--border); border-radius: 12px; padding: 0.85rem 0.95rem; font: inherit; background: #fff;"
-                        >
-                            <option value="">Firsat secin</option>
+                    <div class="field">
+                        <label class="field-label" for="opportunity_id">Fırsat</label>
+                        <select class="select" id="opportunity_id" name="opportunity_id" required>
+                            <option value="">Fırsat seçin</option>
                             @foreach ($opportunities as $opportunity)
                                 <option value="{{ $opportunity->id }}" @selected((string) old('opportunity_id') === (string) $opportunity->id)>
                                     {{ $opportunity->title }}
@@ -51,22 +46,22 @@
                         </select>
                     </div>
 
-                    <div>
-                        <label for="amount">Anlasma Tutari</label>
-                        <input id="amount" name="amount" type="number" min="0" step="0.01" value="{{ old('amount') }}">
+                    <div class="field">
+                        <label class="field-label" for="amount">Anlaşma Tutarı</label>
+                        <input class="input" id="amount" name="amount" type="number" min="0" step="0.01" value="{{ old('amount') }}">
                     </div>
 
-                    <div>
-                        <label for="closed_at">Kapanis Tarihi</label>
-                        <input id="closed_at" name="closed_at" type="datetime-local" value="{{ old('closed_at') }}">
+                    <div class="field">
+                        <label class="field-label" for="closed_at">Kapanış Tarihi</label>
+                        <input class="input" id="closed_at" name="closed_at" type="datetime-local" value="{{ old('closed_at') }}">
                     </div>
 
-                    <div style="display: flex; gap: 0.75rem; flex-wrap: wrap;">
-                        <button class="button" type="submit">Anlasmayi Kaydet</button>
-                        <a class="button" href="{{ url('/deals') }}" style="background: #e5e7eb; color: var(--text);">Vazgec</a>
+                    <div class="inline-actions">
+                        <button class="btn btn-primary" type="submit">Anlaşmayı Kaydet</button>
+                        <a class="btn btn-secondary" href="{{ url('/deals') }}">Vazgeç</a>
                     </div>
                 </form>
             @endif
         </div>
-    </section>
+    </x-ui.panel>
 @endsection

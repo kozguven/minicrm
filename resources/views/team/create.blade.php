@@ -5,65 +5,61 @@
         $selectedRoleIds = collect(old('role_ids', []))->map(fn ($roleId) => (int) $roleId);
     @endphp
 
-    <section class="card" style="width: min(100%, 820px);">
-        <div class="stack">
-            <div>
-                <p class="muted" style="margin: 0 0 0.35rem; font-weight: 600;">Yonetim &gt; Takim</p>
-                <h1 style="margin: 0 0 0.35rem; font-size: 1.75rem;">Yeni Takim Uyesi</h1>
-                <p class="muted" style="margin: 0;">Ad, e-posta, sifre ve bir veya daha fazla rol belirleyin.</p>
-            </div>
+    <x-ui.panel size="lg">
+        <div class="surface-stack">
+            <x-ui.page-header
+                eyebrow="Yönetim / Takım"
+                title="Yeni Takım Üyesi"
+                subtitle="Ad, e-posta, şifre ve bir veya daha fazla rol belirleyin."
+            />
 
             @if ($errors->any())
-                <div class="error">
-                    {{ $errors->first() }}
-                </div>
+                <x-ui.notice tone="danger">{{ $errors->first() }}</x-ui.notice>
             @endif
 
-            <form method="POST" action="{{ url('/team') }}" class="stack">
+            <form method="POST" action="{{ url('/team') }}" class="form-stack">
                 @csrf
 
-                <div>
-                    <label for="name">Ad Soyad</label>
-                    <input id="name" name="name" type="text" value="{{ old('name') }}" required>
+                <div class="field">
+                    <label class="field-label" for="name">Ad Soyad</label>
+                    <input class="input" id="name" name="name" type="text" value="{{ old('name') }}" required>
                 </div>
 
-                <div>
-                    <label for="email">E-posta</label>
-                    <input id="email" name="email" type="email" value="{{ old('email') }}" required>
+                <div class="field">
+                    <label class="field-label" for="email">E-posta</label>
+                    <input class="input" id="email" name="email" type="email" value="{{ old('email') }}" required>
                 </div>
 
-                <div>
-                    <label for="password">Sifre</label>
-                    <input id="password" name="password" type="password" required>
+                <div class="field">
+                    <label class="field-label" for="password">Şifre</label>
+                    <input class="input" id="password" name="password" type="password" required>
                 </div>
 
-                <div class="stack" style="gap: 0.75rem;">
-                    <div>
-                        <h2 style="margin: 0 0 0.35rem; font-size: 1.1rem;">Roller</h2>
-                        <p class="muted" style="margin: 0;">Uyeye en az bir rol atayin.</p>
-                    </div>
+                <section class="form-stack">
+                    <h2 class="section-title">Roller</h2>
+                    <p class="muted">Üyeye en az bir rol atayın.</p>
 
                     @forelse ($roles as $role)
-                        <label style="display: flex; gap: 0.75rem; align-items: center; border: 1px solid var(--border); border-radius: 14px; padding: 0.85rem 1rem; margin: 0;">
+                        <label class="checkbox-row">
                             <input
+                                class="checkbox"
                                 type="checkbox"
                                 name="role_ids[]"
                                 value="{{ $role->id }}"
-                                style="width: auto;"
                                 @checked($selectedRoleIds->contains($role->id))
                             >
                             <span>{{ $role->name }}</span>
                         </label>
                     @empty
-                        <p class="muted" style="margin: 0;">Atanabilir rol bulunmuyor.</p>
+                        <x-ui.empty-state>Atanabilir rol bulunmuyor.</x-ui.empty-state>
                     @endforelse
-                </div>
+                </section>
 
-                <div style="display: flex; gap: 0.75rem; flex-wrap: wrap;">
-                    <button class="button" type="submit">Takim Uyesini Kaydet</button>
-                    <a class="button" href="{{ url('/team') }}" style="background: #e5e7eb; color: var(--text);">Vazgec</a>
+                <div class="inline-actions">
+                    <button class="btn btn-primary" type="submit">Takım Üyesini Kaydet</button>
+                    <a class="btn btn-secondary" href="{{ url('/team') }}">Vazgeç</a>
                 </div>
             </form>
         </div>
-    </section>
+    </x-ui.panel>
 @endsection

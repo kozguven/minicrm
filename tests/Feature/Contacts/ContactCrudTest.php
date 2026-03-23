@@ -64,9 +64,9 @@ class ContactCrudTest extends TestCase
         $this->actingAs($user)
             ->get('/companies')
             ->assertOk()
-            ->assertSeeText('Sirketler')
+            ->assertSeeText('Şirketler')
             ->assertSeeText('Acme A.S.')
-            ->assertSeeText('Yeni Sirket');
+            ->assertSeeText('Yeni Şirket');
     }
 
     public function test_user_with_only_companies_view_permission_cannot_open_company_create_screen(): void
@@ -85,7 +85,7 @@ class ContactCrudTest extends TestCase
         $this->actingAs($user)
             ->get('/companies/create')
             ->assertOk()
-            ->assertSeeText('Yeni Sirket');
+            ->assertSeeText('Yeni Şirket');
     }
 
     public function test_user_with_companies_create_permission_can_create_company(): void
@@ -119,10 +119,10 @@ class ContactCrudTest extends TestCase
         $this->actingAs($user)
             ->get('/contacts')
             ->assertOk()
-            ->assertSeeText('Kisiler')
+            ->assertSeeText('Kişiler')
             ->assertSeeText('Ayse Yilmaz')
             ->assertSeeText('Acme A.S.')
-            ->assertSeeText('Yeni Kisi');
+            ->assertSeeText('Yeni Kişi');
     }
 
     public function test_user_with_only_companies_view_permission_cannot_open_contact_create_screen(): void
@@ -142,7 +142,7 @@ class ContactCrudTest extends TestCase
         $this->actingAs($user)
             ->get('/contacts/create')
             ->assertOk()
-            ->assertSeeText('Yeni Kisi')
+            ->assertSeeText('Yeni Kişi')
             ->assertSeeText('Acme A.S.');
     }
 

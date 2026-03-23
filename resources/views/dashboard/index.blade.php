@@ -1,37 +1,45 @@
 @extends('layouts.app')
 
 @section('content')
-    <section class="card" style="width: min(100%, 980px);">
-        <div class="stack">
-            <div style="display: flex; justify-content: space-between; align-items: center; gap: 1rem; flex-wrap: wrap;">
-                <div>
-                    <p class="muted" style="margin: 0 0 0.35rem; font-weight: 600;">CRM &gt; Dashboard</p>
-                    <h1 style="margin: 0 0 0.35rem; font-size: 1.75rem;">Dashboard</h1>
-                    <p class="muted" style="margin: 0;">Ekip performansinin anlik ozetini bu ekrandan takip edin.</p>
-                </div>
-                <a class="button" href="/today">Today ekranina don</a>
-            </div>
+    <x-ui.panel size="xl">
+        <div class="surface-stack">
+            <x-ui.page-header
+                eyebrow="CRM / Dashboard"
+                title="Dashboard"
+                subtitle="Ekip performansının anlık özetini takip edin, öncelikli aksiyonlara buradan geçin."
+            >
+                <a class="btn btn-ghost" href="/today">Günüm Ekranına Dön</a>
+            </x-ui.page-header>
 
             @if (! $canViewCrm)
-                <section style="border: 1px solid var(--border); border-radius: 18px; padding: 1.25rem; background: #fffbeb;">
-                    <div class="stack" style="gap: 0.5rem;">
-                        <h2 style="margin: 0; font-size: 1.2rem;">Yetki Gerekli</h2>
-                        <p class="muted" style="margin: 0;">{{ $permissionMessage }}</p>
-                    </div>
-                </section>
+                <x-ui.permission-panel>
+                    {{ $permissionMessage }}
+                </x-ui.permission-panel>
             @else
-                <div style="display: grid; gap: 1rem; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));">
-                    <article style="border: 1px solid var(--border); border-radius: 16px; padding: 1rem;">
-                        <p class="muted" style="margin: 0 0 0.6rem; font-weight: 600;">Açık Fırsatlar</p>
-                        <p style="margin: 0; font-size: 2rem; font-weight: 700;">{{ $metrics['open_opportunities'] }}</p>
-                    </article>
+                <div class="metric-grid">
+                    <x-ui.metric-card
+                        label="Açık Fırsatlar"
+                        :value="$metrics['open_opportunities']"
+                        hint="Henüz anlaşmaya dönmeyen fırsatlar"
+                    />
 
-                    <article style="border: 1px solid var(--border); border-radius: 16px; padding: 1rem;">
-                        <p class="muted" style="margin: 0 0 0.6rem; font-weight: 600;">Haftalık Kapanan Satış</p>
-                        <p style="margin: 0; font-size: 2rem; font-weight: 700;">{{ $metrics['weekly_closed_deals'] }}</p>
-                    </article>
+                    <x-ui.metric-card
+                        label="Haftalık Kapanan Satış"
+                        :value="$metrics['weekly_closed_deals']"
+                        hint="Bu hafta kapanan anlaşmalar"
+                    />
+                </div>
+
+                <div class="content-card">
+                    <h2 class="section-title">Hızlı Aksiyonlar</h2>
+                    <p class="muted">Kritik CRM akışlarına tek tıkla geçiş yapın.</p>
+                    <div class="inline-actions" style="margin-top: 0.6rem;">
+                        <a class="btn btn-primary" href="/opportunities">Fırsatları Yönet</a>
+                        <a class="btn btn-secondary" href="/tasks">Görevleri Gör</a>
+                        <a class="btn btn-secondary" href="/deals">Anlaşmaları İncele</a>
+                    </div>
                 </div>
             @endif
         </div>
-    </section>
+    </x-ui.panel>
 @endsection

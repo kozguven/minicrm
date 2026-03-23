@@ -5,110 +5,87 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>{{ config('app.name', 'Mini CRM') }}</title>
-    <style>
-        :root {
-            color-scheme: light;
-            --bg: #f6f3ef;
-            --panel: #ffffff;
-            --text: #1f2937;
-            --muted: #6b7280;
-            --border: #e5e7eb;
-            --accent: #0f766e;
-            --accent-strong: #115e59;
-        }
 
-        * { box-sizing: border-box; }
-        body {
-            margin: 0;
-            font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-            background: linear-gradient(180deg, #fbf8f5 0%, var(--bg) 100%);
-            color: var(--text);
-        }
-        .shell {
-            min-height: 100vh;
-            display: flex;
-            flex-direction: column;
-        }
-        .topbar {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 1.25rem 1.5rem;
-            border-bottom: 1px solid var(--border);
-            background: rgba(255, 255, 255, 0.72);
-            backdrop-filter: blur(10px);
-        }
-        .brand {
-            font-weight: 700;
-            letter-spacing: 0.02em;
-        }
-        .content {
-            flex: 1;
-            display: grid;
-            place-items: center;
-            padding: 2rem 1rem;
-        }
-        .card {
-            width: min(100%, 420px);
-            background: var(--panel);
-            border: 1px solid var(--border);
-            border-radius: 20px;
-            padding: 1.5rem;
-            box-shadow: 0 20px 60px rgba(17, 24, 39, 0.08);
-        }
-        .button {
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            border: 0;
-            border-radius: 12px;
-            padding: 0.85rem 1rem;
-            background: var(--accent);
-            color: #fff;
-            text-decoration: none;
-            font-weight: 600;
-            cursor: pointer;
-        }
-        .button:hover { background: var(--accent-strong); }
-        .muted { color: var(--muted); }
-        .stack > * + * { margin-top: 1rem; }
-        .error {
-            margin: 0 0 1rem;
-            color: #b91c1c;
-            font-size: 0.95rem;
-        }
-        label {
-            display: block;
-            font-weight: 600;
-            margin-bottom: 0.35rem;
-        }
-        input {
-            width: 100%;
-            border: 1px solid var(--border);
-            border-radius: 12px;
-            padding: 0.85rem 0.95rem;
-            font: inherit;
-            background: #fff;
-        }
-        input:focus {
-            outline: 2px solid color-mix(in srgb, var(--accent) 30%, white);
-            border-color: var(--accent);
-        }
-    </style>
+    @php
+        $appStyles = file_get_contents(resource_path('css/app.css'));
+    @endphp
+    <style>{!! $appStyles !!}</style>
 </head>
 <body>
-    <div class="shell">
-        <header class="topbar">
-            <div class="brand">{{ config('app.name', 'Mini CRM') }}</div>
-            @auth
-                <form method="POST" action="{{ route('logout') }}">
-                    @csrf
-                    <button class="button" type="submit">Çıkış Yap</button>
-                </form>
-            @endauth
+    @php
+        $user = auth()->user();
+        $isActive = static fn (array $patterns): bool => request()->is(...$patterns);
+
+        $navItems = [];
+
+        if ($user) {
+            $navItems = [
+                ['label' => 'Günüm', 'href' => '/today', 'patterns' => ['today']],
+                ['label' => 'Dashboard', 'href' => '/dashboard', 'patterns' => ['dashboard']],
+                ['label' => 'Şirketler', 'href' => '/companies', 'patterns' => ['companies', 'companies/*']],
+                ['label' => 'Kişiler', 'href' => '/contacts', 'patterns' => ['contacts', 'contacts/*']],
+                ['label' => 'Fırsatlar', 'href' => '/opportunities', 'patterns' => ['opportunities', 'opportunities/*']],
+                ['label' => 'Görevler', 'href' => '/tasks', 'patterns' => ['tasks', 'tasks/*']],
+                ['label' => 'Anlaşmalar', 'href' => '/deals', 'patterns' => ['deals', 'deals/*']],
+            ];
+
+            if ($user->isAdmin()) {
+                $navItems[] = ['label' => 'Roller', 'href' => '/roles', 'patterns' => ['roles', 'roles/*']];
+                $navItems[] = ['label' => 'Takım', 'href' => '/team', 'patterns' => ['team', 'team/*']];
+            }
+        }
+    @endphp
+
+    <div class="app-shell">
+        <header class="app-header" @auth data-nav-shell="global" @endauth>
+            <div class="app-header__inner">
+                <div class="app-brand-row">
+                    <a class="app-brand" href="{{ auth()->check() ? '/today' : '/login' }}">
+                        <h1 class="app-brand__name">{{ config('app.name', 'Mini CRM') }}</h1>
+                        <span class="app-brand__badge">Premium</span>
+                    </a>
+
+                    <div class="app-header__right">
+                        @auth
+                            @can('create', \App\Models\Opportunity::class)
+                                <a class="btn btn-ghost" href="/opportunities/create">Yeni Fırsat</a>
+                            @endcan
+
+                            @can('create', \App\Models\CrmTask::class)
+                                <a class="btn btn-ghost" href="/tasks/create">Yeni Görev</a>
+                            @endcan
+
+                            <form method="POST" action="{{ route('logout') }}">
+                                @csrf
+                                <button class="btn btn-secondary" type="submit">Çıkış Yap</button>
+                            </form>
+                        @else
+                            <a class="btn btn-primary" href="{{ route('login') }}">Giriş Yap</a>
+                        @endauth
+                    </div>
+                </div>
+
+                @auth
+                    <nav class="top-nav" aria-label="Ana Menü">
+                        @foreach ($navItems as $item)
+                            @php
+                                $itemIsActive = $isActive($item['patterns']);
+                            @endphp
+
+                            <a
+                                class="top-nav-link {{ $itemIsActive ? 'is-active' : '' }}"
+                                href="{{ $item['href'] }}"
+                                @if ($itemIsActive) aria-current="page" @endif
+                            >
+                                {{ $item['label'] }}
+                            </a>
+                        @endforeach
+                    </nav>
+                @endauth
+            </div>
         </header>
 
-        <main class="content">
+        <main class="{{ auth()->check() ? 'app-main' : 'auth-main' }}">
             @yield('content')
         </main>
     </div>

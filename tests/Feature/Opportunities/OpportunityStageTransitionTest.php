@@ -70,11 +70,11 @@ class OpportunityStageTransitionTest extends TestCase
         $this->actingAs($user)
             ->get('/opportunities')
             ->assertOk()
-            ->assertSeeText('Firsatlar')
+            ->assertSeeText('Fırsatlar')
             ->assertSeeText('Mini CRM Retainer')
             ->assertSeeText('Ayse Yilmaz')
             ->assertSeeText('Gorusme')
-            ->assertDontSeeText('Yeni Firsat');
+            ->assertDontSeeText('Yeni Fırsat');
     }
 
     public function test_user_with_companies_view_and_create_permissions_sees_opportunity_create_cta_on_index(): void
@@ -84,7 +84,7 @@ class OpportunityStageTransitionTest extends TestCase
         $this->actingAs($user)
             ->get('/opportunities')
             ->assertOk()
-            ->assertSeeText('Yeni Firsat');
+            ->assertSeeText('Yeni Fırsat');
     }
 
     public function test_user_with_only_companies_view_permission_cannot_open_opportunity_create_screen(): void
@@ -125,7 +125,7 @@ class OpportunityStageTransitionTest extends TestCase
         $this->actingAs($user)
             ->get('/opportunities/create')
             ->assertOk()
-            ->assertSeeText('Yeni Firsat')
+            ->assertSeeText('Yeni Fırsat')
             ->assertSeeText('Ayse Yilmaz')
             ->assertSeeText('Yeni');
     }
@@ -146,7 +146,7 @@ class OpportunityStageTransitionTest extends TestCase
                 'expected_close_date' => '2026-04-30',
             ])
             ->assertOk()
-            ->assertSeeText('Today');
+            ->assertSeeText('Günüm');
 
         $this->assertDatabaseHas('opportunities', [
             'contact_id' => $contact->id,
@@ -168,7 +168,7 @@ class OpportunityStageTransitionTest extends TestCase
                 'opportunity_stage_id' => $nextStage->id,
             ])
             ->assertOk()
-            ->assertSeeText('Today');
+            ->assertSeeText('Günüm');
 
         $this->assertDatabaseHas('opportunities', [
             'id' => $opportunity->id,
