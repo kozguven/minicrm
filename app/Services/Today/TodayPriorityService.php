@@ -25,22 +25,22 @@ class TodayPriorityService
         $sections = [
             [
                 'type' => 'call',
-                'title' => 'Aranacak Kisiler',
-                'empty_message' => 'Bugun icin aranacak kisi yok.',
+                'title' => 'Aranacak Kişiler',
+                'empty_message' => 'Bugün için aranacak kişi yok.',
                 'priority' => 1,
                 'items' => collect(),
             ],
             [
                 'type' => 'critical_opportunity',
-                'title' => 'Kritik Firsatlar',
-                'empty_message' => 'Bugun icin kritik firsat yok.',
+                'title' => 'Kritik Fırsatlar',
+                'empty_message' => 'Bugün için kritik fırsat yok.',
                 'priority' => 2,
                 'items' => collect(),
             ],
             [
                 'type' => 'overdue_task',
-                'title' => 'Geciken Gorevler',
-                'empty_message' => 'Geciken gorev yok.',
+                'title' => 'Geciken Görevler',
+                'empty_message' => 'Geciken görev yok.',
                 'priority' => 3,
                 'items' => collect(),
             ],

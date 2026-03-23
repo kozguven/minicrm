@@ -63,6 +63,10 @@ class TodayPriorityServiceTest extends TestCase
             ['call', 'critical_opportunity', 'overdue_task'],
             array_column($sections, 'type')
         );
+        $this->assertSame(
+            ['Aranacak Kişiler', 'Kritik Fırsatlar', 'Geciken Görevler'],
+            array_column($sections, 'title')
+        );
         $this->assertSame([$callContact->id], $sections[0]['items']->pluck('id')->all());
         $this->assertSame([$criticalOpportunity->id], $sections[1]['items']->pluck('id')->all());
         $this->assertSame([$overdueTask->id], $sections[2]['items']->pluck('id')->all());
@@ -79,6 +83,14 @@ class TodayPriorityServiceTest extends TestCase
         $this->assertSame(
             ['call', 'critical_opportunity', 'overdue_task'],
             array_column($sections, 'type')
+        );
+        $this->assertSame(
+            [
+                'Bugün için aranacak kişi yok.',
+                'Bugün için kritik fırsat yok.',
+                'Geciken görev yok.',
+            ],
+            array_column($sections, 'empty_message')
         );
         $this->assertSame([0, 0, 0], array_map(
             fn (array $section) => $section['items']->count(),

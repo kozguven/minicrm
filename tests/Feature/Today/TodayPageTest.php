@@ -63,9 +63,9 @@ class TodayPageTest extends TestCase
             ->assertOk()
             ->assertSeeText('Today')
             ->assertSeeInOrder([
-                'Aranacak Kisiler',
-                'Kritik Firsatlar',
-                'Geciken Gorevler',
+                'Aranacak Kişiler',
+                'Kritik Fırsatlar',
+                'Geciken Görevler',
             ])
             ->assertSeeText('Ayse Yilmaz')
             ->assertSeeText('Bugun Kapanacak Firsat')
@@ -81,13 +81,13 @@ class TodayPageTest extends TestCase
             ->get('/today')
             ->assertOk()
             ->assertSeeInOrder([
-                'Aranacak Kisiler',
-                'Kritik Firsatlar',
-                'Geciken Gorevler',
+                'Aranacak Kişiler',
+                'Kritik Fırsatlar',
+                'Geciken Görevler',
             ])
-            ->assertSeeText('Bugun icin aranacak kisi yok.')
-            ->assertSeeText('Bugun icin kritik firsat yok.')
-            ->assertSeeText('Geciken gorev yok.');
+            ->assertSeeText('Bugün için aranacak kişi yok.')
+            ->assertSeeText('Bugün için kritik fırsat yok.')
+            ->assertSeeText('Geciken görev yok.');
     }
 
     /**
