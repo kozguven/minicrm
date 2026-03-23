@@ -4,6 +4,7 @@ namespace Tests\Feature\Permissions;
 
 use App\Models\Company;
 use App\Models\Contact;
+use App\Models\CrmTask;
 use App\Models\Opportunity;
 use App\Models\OpportunityStage;
 use App\Models\Permission;
@@ -83,5 +84,19 @@ class PermissionMatrixTest extends TestCase
         $this->assertTrue(Gate::forUser($user)->allows('viewAny', Opportunity::class));
         $this->assertTrue(Gate::forUser($user)->allows('create', Opportunity::class));
         $this->assertTrue(Gate::forUser($user)->allows('update', $opportunity));
+    }
+
+    public function test_crm_task_policy_reuses_company_permission_keys_for_listing_and_creation(): void
+    {
+        $user = User::factory()->create();
+        $role = Role::factory()->create();
+        $viewPermission = Permission::factory()->create(['key' => 'companies.view']);
+        $createPermission = Permission::factory()->create(['key' => 'companies.create']);
+
+        $role->permissions()->attach([$viewPermission->id, $createPermission->id]);
+        $user->roles()->attach($role);
+
+        $this->assertTrue(Gate::forUser($user)->allows('viewAny', CrmTask::class));
+        $this->assertTrue(Gate::forUser($user)->allows('create', CrmTask::class));
     }
 }

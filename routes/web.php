@@ -3,6 +3,7 @@
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\CompanyController;
 use App\Http\Controllers\ContactController;
+use App\Http\Controllers\CrmTaskController;
 use App\Http\Controllers\OpportunityController;
 use App\Http\Controllers\RoleController;
 use App\Http\Controllers\TeamController;
@@ -30,6 +31,10 @@ Route::middleware('auth')->group(function () {
     Route::get('/opportunities/create', [OpportunityController::class, 'create']);
     Route::post('/opportunities', [OpportunityController::class, 'store']);
     Route::patch('/opportunities/{opportunity}/stage', [OpportunityController::class, 'updateStage']);
+
+    Route::get('/tasks', [CrmTaskController::class, 'index']);
+    Route::get('/tasks/create', [CrmTaskController::class, 'create']);
+    Route::post('/tasks', [CrmTaskController::class, 'store']);
 
     Route::get('/team', [TeamController::class, 'index']);
     Route::get('/team/create', [TeamController::class, 'create']);
