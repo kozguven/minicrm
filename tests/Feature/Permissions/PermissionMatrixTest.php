@@ -86,17 +86,31 @@ class PermissionMatrixTest extends TestCase
         $this->assertTrue(Gate::forUser($user)->allows('update', $opportunity));
     }
 
-    public function test_crm_task_policy_reuses_company_permission_keys_for_listing_and_creation(): void
+    public function test_crm_task_policy_uses_view_permission_for_listing_and_requires_view_plus_create_for_creation(): void
     {
-        $user = User::factory()->create();
-        $role = Role::factory()->create();
+        $viewOnlyUser = User::factory()->create();
+        $viewOnlyRole = Role::factory()->create();
         $viewPermission = Permission::factory()->create(['key' => 'companies.view']);
+
+        $viewOnlyRole->permissions()->attach([$viewPermission->id]);
+        $viewOnlyUser->roles()->attach($viewOnlyRole);
+
+        $createOnlyUser = User::factory()->create();
+        $createOnlyRole = Role::factory()->create();
         $createPermission = Permission::factory()->create(['key' => 'companies.create']);
 
-        $role->permissions()->attach([$viewPermission->id, $createPermission->id]);
-        $user->roles()->attach($role);
+        $createOnlyRole->permissions()->attach([$createPermission->id]);
+        $createOnlyUser->roles()->attach($createOnlyRole);
 
-        $this->assertTrue(Gate::forUser($user)->allows('viewAny', CrmTask::class));
-        $this->assertTrue(Gate::forUser($user)->allows('create', CrmTask::class));
+        $fullAccessUser = User::factory()->create();
+        $fullAccessRole = Role::factory()->create();
+
+        $fullAccessRole->permissions()->attach([$viewPermission->id, $createPermission->id]);
+        $fullAccessUser->roles()->attach($fullAccessRole);
+
+        $this->assertTrue(Gate::forUser($viewOnlyUser)->allows('viewAny', CrmTask::class));
+        $this->assertFalse(Gate::forUser($viewOnlyUser)->allows('create', CrmTask::class));
+        $this->assertFalse(Gate::forUser($createOnlyUser)->allows('create', CrmTask::class));
+        $this->assertTrue(Gate::forUser($fullAccessUser)->allows('create', CrmTask::class));
     }
 }

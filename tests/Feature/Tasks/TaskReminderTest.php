@@ -71,15 +71,42 @@ class TaskReminderTest extends TestCase
     public function test_user_with_only_companies_view_permission_cannot_open_task_create_screen(): void
     {
         $user = $this->userWithPermissions(['companies.view']);
+        $opportunity = Opportunity::factory()->create();
 
         $this->actingAs($user)
             ->get('/tasks/create')
             ->assertForbidden();
+
+        $this->actingAs($user)
+            ->post('/tasks', [
+                'opportunity_id' => $opportunity->id,
+                'title' => 'Sadece goruntuleme yetkisi',
+                'due_at' => '2026-03-30 10:30:00',
+            ])
+            ->assertForbidden();
     }
 
-    public function test_user_with_companies_create_permission_can_open_task_create_screen(): void
+    public function test_user_with_only_companies_create_permission_cannot_open_task_create_screen_or_create_task(): void
     {
         $user = $this->userWithPermissions(['companies.create']);
+        $opportunity = Opportunity::factory()->create(['title' => 'Mini CRM Retainer']);
+
+        $this->actingAs($user)
+            ->get('/tasks/create')
+            ->assertForbidden();
+
+        $this->actingAs($user)
+            ->post('/tasks', [
+                'opportunity_id' => $opportunity->id,
+                'title' => 'Yetkisiz gorev olusturma',
+                'due_at' => '2026-03-30 10:30:00',
+            ])
+            ->assertForbidden();
+    }
+
+    public function test_user_with_companies_view_and_create_permissions_can_open_task_create_screen(): void
+    {
+        $user = $this->userWithPermissions(['companies.view', 'companies.create']);
         $opportunity = Opportunity::factory()->create(['title' => 'Mini CRM Retainer']);
 
         $this->actingAs($user)
@@ -87,12 +114,13 @@ class TaskReminderTest extends TestCase
             ->assertOk()
             ->assertSeeText('Yeni Gorev')
             ->assertSeeText('Mini CRM Retainer')
-            ->assertSeeText($opportunity->contact->first_name);
+            ->assertSeeText($opportunity->contact->first_name)
+            ->assertSeeText('Vazgec');
     }
 
-    public function test_user_with_companies_create_permission_can_create_task(): void
+    public function test_user_with_companies_view_and_create_permissions_can_create_task_and_see_success_message_on_index(): void
     {
-        $user = $this->userWithPermissions(['companies.create']);
+        $user = $this->userWithPermissions(['companies.view', 'companies.create']);
         $opportunity = Opportunity::factory()->create();
 
         $this->followingRedirects()
@@ -103,12 +131,33 @@ class TaskReminderTest extends TestCase
                 'due_at' => '2026-03-30 10:30:00',
             ])
             ->assertOk()
-            ->assertSeeText('Today');
+            ->assertSeeText('Gorev kaydedildi.')
+            ->assertSeeText('Teklif sunumunu hazirla');
 
         $this->assertDatabaseHas('crm_tasks', [
             'opportunity_id' => $opportunity->id,
             'title' => 'Teklif sunumunu hazirla',
             'completed_at' => null,
+        ]);
+    }
+
+    public function test_task_create_validation_returns_clear_turkish_messages(): void
+    {
+        $user = $this->userWithPermissions(['companies.view', 'companies.create']);
+
+        $response = $this->from('/tasks/create')
+            ->actingAs($user)
+            ->post('/tasks', [
+                'opportunity_id' => 999999,
+                'title' => '',
+                'due_at' => 'gecersiz-tarih',
+            ]);
+
+        $response->assertRedirect('/tasks/create');
+        $response->assertSessionHasErrors([
+            'opportunity_id' => 'Lutfen gecerli bir firsat secin.',
+            'title' => 'Gorev basligi alani zorunludur.',
+            'due_at' => 'Termin gecerli bir tarih olmalidir.',
         ]);
     }
 

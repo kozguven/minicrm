@@ -24,4 +24,32 @@ class StoreCrmTaskRequest extends FormRequest
             'due_at' => ['nullable', 'date'],
         ];
     }
+
+    /**
+     * @return array<string, string>
+     */
+    public function messages(): array
+    {
+        return [
+            'opportunity_id.required' => 'Lutfen bir firsat secin.',
+            'opportunity_id.integer' => 'Firsat secimi sayi olmalidir.',
+            'opportunity_id.exists' => 'Lutfen gecerli bir firsat secin.',
+            'required' => ':attribute alani zorunludur.',
+            'string' => ':attribute metin olmalidir.',
+            'max.string' => ':attribute en fazla :max karakter olabilir.',
+            'date' => ':attribute gecerli bir tarih olmalidir.',
+        ];
+    }
+
+    /**
+     * @return array<string, string>
+     */
+    public function attributes(): array
+    {
+        return [
+            'opportunity_id' => 'Firsat',
+            'title' => 'Gorev basligi',
+            'due_at' => 'Termin',
+        ];
+    }
 }

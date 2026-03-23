@@ -16,7 +16,6 @@ class CrmTaskController extends Controller
         $this->authorize('viewAny', CrmTask::class);
 
         return view('tasks.index', [
-            'now' => now(),
             'tasks' => CrmTask::query()
                 ->with(['opportunity.contact.company'])
                 ->orderByRaw('case when completed_at is null and due_at is not null and due_at < ? then 0 else 1 end', [now()])
