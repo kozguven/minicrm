@@ -17,23 +17,40 @@ class CompanyController extends Controller
         $this->authorize('viewAny', Company::class);
 
         $search = trim((string) $request->query('q', ''));
+        $sort = (string) $request->query('sort', 'name_asc');
+        $createdFrom = trim((string) $request->query('created_from', ''));
+        $createdTo = trim((string) $request->query('created_to', ''));
+        $allowedSorts = ['name_asc', 'name_desc', 'contacts_desc', 'recent'];
+        $normalizedSort = in_array($sort, $allowedSorts, true) ? $sort : 'name_asc';
+
+        $companies = Company::query()
+            ->withCount('contacts')
+            ->when($search !== '', function ($query) use ($search): void {
+                $like = "%{$search}%";
+
+                $query->where(function ($nestedQuery) use ($like): void {
+                    $nestedQuery
+                        ->where('name', 'like', $like)
+                        ->orWhere('website', 'like', $like);
+                });
+            })
+            ->when($createdFrom !== '', fn ($query) => $query->whereDate('created_at', '>=', $createdFrom))
+            ->when($createdTo !== '', fn ($query) => $query->whereDate('created_at', '<=', $createdTo));
+
+        match ($normalizedSort) {
+            'name_desc' => $companies->orderByDesc('name'),
+            'contacts_desc' => $companies->orderByDesc('contacts_count')->orderBy('name'),
+            'recent' => $companies->orderByDesc('created_at')->orderBy('name'),
+            default => $companies->orderBy('name'),
+        };
 
         return view('companies.index', [
-            'companies' => Company::query()
-                ->when($search !== '', function ($query) use ($search): void {
-                    $like = "%{$search}%";
-
-                    $query->where(function ($nestedQuery) use ($like): void {
-                        $nestedQuery
-                            ->where('name', 'like', $like)
-                            ->orWhere('website', 'like', $like);
-                    });
-                })
-                ->withCount('contacts')
-                ->orderBy('name')
-                ->get(),
+            'companies' => $companies->paginate(20)->withQueryString(),
             'filters' => [
                 'q' => $search,
+                'sort' => $normalizedSort,
+                'created_from' => $createdFrom,
+                'created_to' => $createdTo,
             ],
         ]);
     }

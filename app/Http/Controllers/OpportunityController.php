@@ -12,6 +12,7 @@ use App\Models\OpportunityStage;
 use App\Models\User;
 use App\Services\Actions\BestNextActionService;
 use App\Services\Audit\AuditLogger;
+use App\Services\Automation\StageTaskTemplateService;
 use App\Services\Timeline\ActivityTimelineService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -148,12 +149,14 @@ class OpportunityController extends Controller
         UpdateOpportunityStageRequest $request,
         Opportunity $opportunity,
         AuditLogger $auditLogger,
+        StageTaskTemplateService $stageTaskTemplateService,
     ): RedirectResponse {
         $this->applyStageTransition(
             opportunity: $opportunity,
             targetStageId: (int) $request->validated('opportunity_stage_id'),
             actorUserId: $request->user()?->id,
             auditLogger: $auditLogger,
+            stageTaskTemplateService: $stageTaskTemplateService,
         );
 
         return $this->successRedirect($request, 'Firsat asamasi guncellendi.');
@@ -166,8 +169,11 @@ class OpportunityController extends Controller
         return $this->successRedirect($request, 'Firsat guncellendi.');
     }
 
-    public function bulkStage(Request $request, AuditLogger $auditLogger): RedirectResponse
-    {
+    public function bulkStage(
+        Request $request,
+        AuditLogger $auditLogger,
+        StageTaskTemplateService $stageTaskTemplateService,
+    ): RedirectResponse {
         $this->authorize('viewAny', Opportunity::class);
 
         $validated = $request->validate([
@@ -181,7 +187,7 @@ class OpportunityController extends Controller
             ->unique()
             ->values();
 
-        DB::transaction(function () use ($opportunityIds, $validated, $request, $auditLogger): void {
+        DB::transaction(function () use ($opportunityIds, $validated, $request, $auditLogger, $stageTaskTemplateService): void {
             $opportunities = Opportunity::query()
                 ->whereIn('id', $opportunityIds)
                 ->lockForUpdate()
@@ -195,6 +201,7 @@ class OpportunityController extends Controller
                     targetStageId: (int) $validated['opportunity_stage_id'],
                     actorUserId: $request->user()?->id,
                     auditLogger: $auditLogger,
+                    stageTaskTemplateService: $stageTaskTemplateService,
                 );
             }
         });
@@ -251,6 +258,7 @@ class OpportunityController extends Controller
         int $targetStageId,
         ?int $actorUserId,
         AuditLogger $auditLogger,
+        StageTaskTemplateService $stageTaskTemplateService,
     ): void {
         $beforeStageId = (int) $opportunity->opportunity_stage_id;
         if ($beforeStageId === $targetStageId) {
@@ -261,7 +269,7 @@ class OpportunityController extends Controller
             'opportunity_stage_id' => $targetStageId,
         ]);
 
-        $this->ensureStageFollowUpTask($opportunity);
+        $this->ensureStageFollowUpTask($opportunity, $targetStageId, $stageTaskTemplateService);
 
         $auditLogger->log(
             userId: $actorUserId,
@@ -275,11 +283,22 @@ class OpportunityController extends Controller
         );
     }
 
-    private function ensureStageFollowUpTask(Opportunity $opportunity): void
-    {
+    private function ensureStageFollowUpTask(
+        Opportunity $opportunity,
+        int $targetStageId,
+        StageTaskTemplateService $stageTaskTemplateService,
+    ): void {
+        $targetStage = OpportunityStage::query()->find($targetStageId);
+        if (! $targetStage instanceof OpportunityStage) {
+            return;
+        }
+
+        $template = $stageTaskTemplateService->templateForStage($targetStage);
+
         $hasOpenStageTask = CrmTask::query()
             ->where('opportunity_id', $opportunity->id)
             ->where('task_type', 'stage_follow_up')
+            ->where('title', $template['title'])
             ->whereNull('completed_at')
             ->exists();
 
@@ -290,10 +309,10 @@ class OpportunityController extends Controller
         CrmTask::query()->create([
             'opportunity_id' => $opportunity->id,
             'assigned_user_id' => $opportunity->owner_user_id,
-            'title' => 'Asama degisimi sonrasi takip gorevi',
-            'priority' => 'high',
+            'title' => $template['title'],
+            'priority' => $template['priority'],
             'task_type' => 'stage_follow_up',
-            'due_at' => now()->addDay(),
+            'due_at' => now()->addHours($template['due_in_hours']),
         ]);
     }
 

@@ -21,28 +21,58 @@ class ContactController extends Controller
         $this->authorize('viewAny', Contact::class);
 
         $search = trim((string) $request->query('q', ''));
+        $leadStatus = strtolower((string) $request->query('lead_status', 'all'));
+        $priority = strtolower((string) $request->query('priority', 'all'));
+        $sort = strtolower((string) $request->query('sort', 'name_asc'));
+        $lastContactFrom = trim((string) $request->query('last_contact_from', ''));
+        $lastContactTo = trim((string) $request->query('last_contact_to', ''));
+        $allowedLeadStatuses = ['all', 'new', 'contacted', 'qualified', 'lost'];
+        $allowedPriorities = ['all', 'low', 'medium', 'high'];
+        $allowedSorts = ['name_asc', 'name_desc', 'last_contact_desc', 'last_contact_asc'];
+        $normalizedLeadStatus = in_array($leadStatus, $allowedLeadStatuses, true) ? $leadStatus : 'all';
+        $normalizedPriority = in_array($priority, $allowedPriorities, true) ? $priority : 'all';
+        $normalizedSort = in_array($sort, $allowedSorts, true) ? $sort : 'name_asc';
+
+        $contacts = Contact::query()
+            ->with('company')
+            ->when($search !== '', function ($query) use ($search): void {
+                $like = "%{$search}%";
+
+                $query->where(function ($nestedQuery) use ($like): void {
+                    $nestedQuery
+                        ->where('first_name', 'like', $like)
+                        ->orWhere('last_name', 'like', $like)
+                        ->orWhere('email', 'like', $like)
+                        ->orWhere('phone', 'like', $like)
+                        ->orWhereHas('company', fn ($companyQuery) => $companyQuery
+                            ->where('name', 'like', $like));
+                });
+            })
+            ->when($normalizedLeadStatus !== 'all', fn ($query) => $query
+                ->where('lead_status', $normalizedLeadStatus))
+            ->when($normalizedPriority !== 'all', fn ($query) => $query
+                ->where('priority', $normalizedPriority))
+            ->when($lastContactFrom !== '', fn ($query) => $query
+                ->whereDate('last_contacted_at', '>=', $lastContactFrom))
+            ->when($lastContactTo !== '', fn ($query) => $query
+                ->whereDate('last_contacted_at', '<=', $lastContactTo));
+
+        match ($normalizedSort) {
+            'name_desc' => $contacts->orderByDesc('first_name')->orderByDesc('last_name'),
+            'last_contact_desc' => $contacts->orderByDesc('last_contacted_at')->orderBy('first_name')->orderBy('last_name'),
+            'last_contact_asc' => $contacts->orderBy('last_contacted_at')->orderBy('first_name')->orderBy('last_name'),
+            default => $contacts->orderBy('first_name')->orderBy('last_name'),
+        };
 
         return view('contacts.index', [
-            'contacts' => Contact::query()
-                ->with('company')
-                ->when($search !== '', function ($query) use ($search): void {
-                    $like = "%{$search}%";
-
-                    $query->where(function ($nestedQuery) use ($like): void {
-                        $nestedQuery
-                            ->where('first_name', 'like', $like)
-                            ->orWhere('last_name', 'like', $like)
-                            ->orWhere('email', 'like', $like)
-                            ->orWhere('phone', 'like', $like)
-                            ->orWhereHas('company', fn ($companyQuery) => $companyQuery
-                                ->where('name', 'like', $like));
-                    });
-                })
-                ->orderBy('first_name')
-                ->orderBy('last_name')
-                ->get(),
+            'contacts' => $contacts->paginate(20)->withQueryString(),
             'filters' => [
                 'q' => $search,
+                'lead_status' => $normalizedLeadStatus,
+                'priority' => $normalizedPriority,
+                'sort' => $normalizedSort,
+                'last_contact_from' => $lastContactFrom,
+                'last_contact_to' => $lastContactTo,
             ],
         ]);
     }

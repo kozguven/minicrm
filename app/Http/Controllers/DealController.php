@@ -21,30 +21,48 @@ class DealController extends Controller
         $this->authorize('viewAny', Deal::class);
 
         $search = trim((string) $request->query('q', ''));
+        $closedFrom = trim((string) $request->query('closed_from', ''));
+        $closedTo = trim((string) $request->query('closed_to', ''));
+        $sort = (string) $request->query('sort', 'closed_desc');
+        $allowedSorts = ['closed_desc', 'closed_asc', 'amount_desc', 'amount_asc'];
+        $normalizedSort = in_array($sort, $allowedSorts, true) ? $sort : 'closed_desc';
+
+        $deals = Deal::query()
+            ->with(['opportunity.contact.company'])
+            ->when($search !== '', function ($query) use ($search): void {
+                $like = "%{$search}%";
+
+                $query->whereHas('opportunity', function ($opportunityQuery) use ($like): void {
+                    $opportunityQuery
+                        ->where('title', 'like', $like)
+                        ->orWhereHas('contact', function ($contactQuery) use ($like): void {
+                            $contactQuery
+                                ->where('first_name', 'like', $like)
+                                ->orWhere('last_name', 'like', $like)
+                                ->orWhereHas('company', fn ($companyQuery) => $companyQuery
+                                    ->where('name', 'like', $like));
+                        });
+                });
+            })
+            ->when($closedFrom !== '', fn ($query) => $query
+                ->whereDate('closed_at', '>=', $closedFrom))
+            ->when($closedTo !== '', fn ($query) => $query
+                ->whereDate('closed_at', '<=', $closedTo));
+
+        match ($normalizedSort) {
+            'closed_asc' => $deals->orderBy('closed_at')->orderBy('id'),
+            'amount_desc' => $deals->orderByDesc('amount')->orderByDesc('closed_at'),
+            'amount_asc' => $deals->orderBy('amount')->orderByDesc('closed_at'),
+            default => $deals->orderByDesc('closed_at')->orderByDesc('id'),
+        };
 
         return view('deals.index', [
-            'deals' => Deal::query()
-                ->with(['opportunity.contact.company'])
-                ->when($search !== '', function ($query) use ($search): void {
-                    $like = "%{$search}%";
-
-                    $query->whereHas('opportunity', function ($opportunityQuery) use ($like): void {
-                        $opportunityQuery
-                            ->where('title', 'like', $like)
-                            ->orWhereHas('contact', function ($contactQuery) use ($like): void {
-                                $contactQuery
-                                    ->where('first_name', 'like', $like)
-                                    ->orWhere('last_name', 'like', $like)
-                                    ->orWhereHas('company', fn ($companyQuery) => $companyQuery
-                                        ->where('name', 'like', $like));
-                            });
-                    });
-                })
-                ->orderByDesc('closed_at')
-                ->orderByDesc('id')
-                ->get(),
+            'deals' => $deals->paginate(20)->withQueryString(),
             'filters' => [
                 'q' => $search,
+                'closed_from' => $closedFrom,
+                'closed_to' => $closedTo,
+                'sort' => $normalizedSort,
             ],
         ]);
     }

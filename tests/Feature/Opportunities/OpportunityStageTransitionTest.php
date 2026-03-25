@@ -4,6 +4,7 @@ namespace Tests\Feature\Opportunities;
 
 use App\Models\Company;
 use App\Models\Contact;
+use App\Models\CrmTask;
 use App\Models\Opportunity;
 use App\Models\OpportunityStage;
 use App\Models\Permission;
@@ -219,6 +220,36 @@ class OpportunityStageTransitionTest extends TestCase
             'id' => $opportunity->id,
             'opportunity_stage_id' => $nextStage->id,
         ]);
+    }
+
+    public function test_stage_change_creates_stage_based_follow_up_task_template(): void
+    {
+        $user = $this->userWithPermissions(['opportunities.edit']);
+        $opportunity = Opportunity::factory()->create([
+            'owner_user_id' => $user->id,
+        ]);
+        $nextStage = OpportunityStage::factory()->create(['name' => 'Teklif']);
+
+        $this->actingAs($user)
+            ->patch("/opportunities/{$opportunity->id}/stage", [
+                'opportunity_stage_id' => $nextStage->id,
+            ])
+            ->assertRedirect('/today');
+
+        $this->assertDatabaseHas('crm_tasks', [
+            'opportunity_id' => $opportunity->id,
+            'assigned_user_id' => $user->id,
+            'task_type' => 'stage_follow_up',
+            'priority' => 'high',
+            'title' => 'Teklif asamasi teklif dosyasini guncelle',
+        ]);
+
+        $task = CrmTask::query()
+            ->where('opportunity_id', $opportunity->id)
+            ->where('task_type', 'stage_follow_up')
+            ->firstOrFail();
+
+        $this->assertNotNull($task->due_at);
     }
 
     public function test_stage_validation_errors_are_shown_on_opportunities_index(): void

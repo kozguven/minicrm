@@ -26,8 +26,40 @@
                     >
                 </div>
 
+                <div class="field" style="flex: 1 1 180px;">
+                    <label class="field-label" for="deal-sort">Sıralama</label>
+                    <select class="select" id="deal-sort" name="sort">
+                        <option value="closed_desc" @selected($filters['sort'] === 'closed_desc')>Kapanış (Yeni)</option>
+                        <option value="closed_asc" @selected($filters['sort'] === 'closed_asc')>Kapanış (Eski)</option>
+                        <option value="amount_desc" @selected($filters['sort'] === 'amount_desc')>Tutar (Yüksek)</option>
+                        <option value="amount_asc" @selected($filters['sort'] === 'amount_asc')>Tutar (Düşük)</option>
+                    </select>
+                </div>
+
+                <div class="field" style="flex: 1 1 170px;">
+                    <label class="field-label" for="deal-closed-from">Kapanış Başlangıç</label>
+                    <input
+                        class="input"
+                        id="deal-closed-from"
+                        name="closed_from"
+                        type="date"
+                        value="{{ $filters['closed_from'] }}"
+                    >
+                </div>
+
+                <div class="field" style="flex: 1 1 170px;">
+                    <label class="field-label" for="deal-closed-to">Kapanış Bitiş</label>
+                    <input
+                        class="input"
+                        id="deal-closed-to"
+                        name="closed_to"
+                        type="date"
+                        value="{{ $filters['closed_to'] }}"
+                    >
+                </div>
+
                 <button class="btn btn-secondary" type="submit">Uygula</button>
-                @if ($filters['q'] !== '')
+                @if ($filters['q'] !== '' || $filters['closed_from'] !== '' || $filters['closed_to'] !== '' || $filters['sort'] !== 'closed_desc')
                     <a class="btn btn-ghost" href="{{ url('/deals') }}">Temizle</a>
                 @endif
             </form>
@@ -81,6 +113,8 @@
                         </article>
                     @endforeach
                 </div>
+
+                {{ $deals->links() }}
             @endif
         </div>
     </x-ui.panel>

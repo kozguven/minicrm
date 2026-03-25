@@ -24,8 +24,40 @@
                     >
                 </div>
 
+                <div class="field" style="flex: 1 1 180px;">
+                    <label class="field-label" for="company-sort">Sıralama</label>
+                    <select class="select" id="company-sort" name="sort">
+                        <option value="name_asc" @selected($filters['sort'] === 'name_asc')>İsim (A-Z)</option>
+                        <option value="name_desc" @selected($filters['sort'] === 'name_desc')>İsim (Z-A)</option>
+                        <option value="contacts_desc" @selected($filters['sort'] === 'contacts_desc')>Kişi Sayısı</option>
+                        <option value="recent" @selected($filters['sort'] === 'recent')>En Yeni</option>
+                    </select>
+                </div>
+
+                <div class="field" style="flex: 1 1 170px;">
+                    <label class="field-label" for="company-created-from">Kayıt Başlangıç</label>
+                    <input
+                        class="input"
+                        id="company-created-from"
+                        name="created_from"
+                        type="date"
+                        value="{{ $filters['created_from'] }}"
+                    >
+                </div>
+
+                <div class="field" style="flex: 1 1 170px;">
+                    <label class="field-label" for="company-created-to">Kayıt Bitiş</label>
+                    <input
+                        class="input"
+                        id="company-created-to"
+                        name="created_to"
+                        type="date"
+                        value="{{ $filters['created_to'] }}"
+                    >
+                </div>
+
                 <button class="btn btn-secondary" type="submit">Uygula</button>
-                @if ($filters['q'] !== '')
+                @if ($filters['q'] !== '' || $filters['sort'] !== 'name_asc' || $filters['created_from'] !== '' || $filters['created_to'] !== '')
                     <a class="btn btn-ghost" href="{{ url('/companies') }}">Temizle</a>
                 @endif
             </form>
@@ -50,6 +82,8 @@
                         </article>
                     @endforeach
                 </div>
+
+                {{ $companies->links() }}
             @endif
         </div>
     </x-ui.panel>
