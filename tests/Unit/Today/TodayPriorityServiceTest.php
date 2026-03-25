@@ -22,7 +22,7 @@ class TodayPriorityServiceTest extends TestCase
         parent::tearDown();
     }
 
-    public function test_prioritizes_calls_then_critical_opportunities_then_overdue_tasks(): void
+    public function test_prioritizes_critical_followups_then_next_step_and_sla_before_legacy_sections(): void
     {
         Carbon::setTestNow('2026-03-23 10:00:00');
 
@@ -63,17 +63,20 @@ class TodayPriorityServiceTest extends TestCase
         $sections = app(TodayPriorityService::class)->build();
 
         $this->assertSame(
-            ['call', 'critical_opportunity', 'overdue_task', 'due_follow_up'],
+            ['critical_follow_up', 'overdue_next_step', 'sla_violation', 'call', 'critical_opportunity', 'overdue_task', 'due_follow_up'],
             array_column($sections, 'type')
         );
         $this->assertSame(
-            ['Aranacak Kişiler', 'Kritik Fırsatlar', 'Geciken Görevler', 'Takip Edilecek Görüşmeler'],
+            ['Kritik Takipler', 'Geciken Next-step', 'SLA Ihlalleri', 'Aranacak Kişiler', 'Kritik Fırsatlar', 'Geciken Görevler', 'Takip Edilecek Görüşmeler'],
             array_column($sections, 'title')
         );
-        $this->assertSame([$callContact->id], $sections[0]['items']->pluck('id')->all());
-        $this->assertSame([$criticalOpportunity->id], $sections[1]['items']->pluck('id')->all());
-        $this->assertSame([$overdueTask->id], $sections[2]['items']->pluck('id')->all());
-        $this->assertCount(0, $sections[3]['items']);
+        $this->assertCount(0, $sections[0]['items']);
+        $this->assertCount(0, $sections[1]['items']);
+        $this->assertCount(0, $sections[2]['items']);
+        $this->assertSame([$callContact->id], $sections[3]['items']->pluck('id')->all());
+        $this->assertSame([$criticalOpportunity->id], $sections[4]['items']->pluck('id')->all());
+        $this->assertSame([$overdueTask->id], $sections[5]['items']->pluck('id')->all());
+        $this->assertCount(0, $sections[6]['items']);
     }
 
     public function test_excludes_contacts_without_phone_from_call_list(): void
@@ -105,7 +108,7 @@ class TodayPriorityServiceTest extends TestCase
 
         $sections = app(TodayPriorityService::class)->build();
 
-        $this->assertSame([$eligibleContact->id], $sections[0]['items']->pluck('id')->all());
+        $this->assertSame([$eligibleContact->id], $sections[3]['items']->pluck('id')->all());
     }
 
     public function test_excludes_converted_opportunities_from_critical_section(): void
@@ -131,7 +134,7 @@ class TodayPriorityServiceTest extends TestCase
 
         $sections = app(TodayPriorityService::class)->build();
 
-        $this->assertSame([$eligibleOpportunity->id], $sections[1]['items']->pluck('id')->all());
+        $this->assertSame([$eligibleOpportunity->id], $sections[4]['items']->pluck('id')->all());
     }
 
     public function test_excludes_completed_tasks_from_overdue_section(): void
@@ -160,6 +163,6 @@ class TodayPriorityServiceTest extends TestCase
 
         $sections = app(TodayPriorityService::class)->build();
 
-        $this->assertSame([$eligibleTask->id], $sections[2]['items']->pluck('id')->all());
+        $this->assertSame([$eligibleTask->id], $sections[5]['items']->pluck('id')->all());
     }
 }

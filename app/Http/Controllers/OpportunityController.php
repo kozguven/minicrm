@@ -11,6 +11,8 @@ use App\Models\Opportunity;
 use App\Models\OpportunityStage;
 use App\Models\User;
 use App\Services\Actions\BestNextActionService;
+use App\Services\Audit\AuditLogger;
+use App\Services\Timeline\ActivityTimelineService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -92,8 +94,11 @@ class OpportunityController extends Controller
         ]);
     }
 
-    public function show(Opportunity $opportunity, BestNextActionService $bestNextActionService): View
-    {
+    public function show(
+        Opportunity $opportunity,
+        BestNextActionService $bestNextActionService,
+        ActivityTimelineService $activityTimelineService,
+    ): View {
         $this->authorize('view', $opportunity);
 
         $opportunity = $opportunity->load([
@@ -109,6 +114,7 @@ class OpportunityController extends Controller
         return view('opportunities.show', [
             'opportunity' => $opportunity,
             'bestNextAction' => $bestNextActionService->forOpportunity($opportunity),
+            'timelineEvents' => $activityTimelineService->forOpportunity($opportunity),
         ]);
     }
 
@@ -138,29 +144,17 @@ class OpportunityController extends Controller
         return $this->successRedirect($request, 'Firsat kaydedildi.');
     }
 
-    public function updateStage(UpdateOpportunityStageRequest $request, Opportunity $opportunity): RedirectResponse
-    {
-        $beforeStageId = $opportunity->opportunity_stage_id;
-        $opportunity->update($request->validated());
-
-        if ($beforeStageId !== $opportunity->opportunity_stage_id) {
-            $hasOpenStageTask = CrmTask::query()
-                ->where('opportunity_id', $opportunity->id)
-                ->where('task_type', 'stage_follow_up')
-                ->whereNull('completed_at')
-                ->exists();
-
-            if (! $hasOpenStageTask) {
-                CrmTask::query()->create([
-                    'opportunity_id' => $opportunity->id,
-                    'assigned_user_id' => $opportunity->owner_user_id,
-                    'title' => 'Asama degisimi sonrasi takip gorevi',
-                    'priority' => 'high',
-                    'task_type' => 'stage_follow_up',
-                    'due_at' => now()->addDay(),
-                ]);
-            }
-        }
+    public function updateStage(
+        UpdateOpportunityStageRequest $request,
+        Opportunity $opportunity,
+        AuditLogger $auditLogger,
+    ): RedirectResponse {
+        $this->applyStageTransition(
+            opportunity: $opportunity,
+            targetStageId: (int) $request->validated('opportunity_stage_id'),
+            actorUserId: $request->user()?->id,
+            auditLogger: $auditLogger,
+        );
 
         return $this->successRedirect($request, 'Firsat asamasi guncellendi.');
     }
@@ -172,7 +166,7 @@ class OpportunityController extends Controller
         return $this->successRedirect($request, 'Firsat guncellendi.');
     }
 
-    public function bulkStage(Request $request): RedirectResponse
+    public function bulkStage(Request $request, AuditLogger $auditLogger): RedirectResponse
     {
         $this->authorize('viewAny', Opportunity::class);
 
@@ -187,7 +181,7 @@ class OpportunityController extends Controller
             ->unique()
             ->values();
 
-        DB::transaction(function () use ($opportunityIds, $validated): void {
+        DB::transaction(function () use ($opportunityIds, $validated, $request, $auditLogger): void {
             $opportunities = Opportunity::query()
                 ->whereIn('id', $opportunityIds)
                 ->lockForUpdate()
@@ -195,13 +189,14 @@ class OpportunityController extends Controller
 
             foreach ($opportunities as $opportunity) {
                 $this->authorize('update', $opportunity);
-            }
 
-            Opportunity::query()
-                ->whereIn('id', $opportunityIds)
-                ->update([
-                    'opportunity_stage_id' => $validated['opportunity_stage_id'],
-                ]);
+                $this->applyStageTransition(
+                    opportunity: $opportunity,
+                    targetStageId: (int) $validated['opportunity_stage_id'],
+                    actorUserId: $request->user()?->id,
+                    auditLogger: $auditLogger,
+                );
+            }
         });
 
         return redirect('/opportunities')->with('status', 'Secili firsatlarin asamasi guncellendi.');
@@ -249,5 +244,66 @@ class OpportunityController extends Controller
         }
 
         return $validated;
+    }
+
+    private function applyStageTransition(
+        Opportunity $opportunity,
+        int $targetStageId,
+        ?int $actorUserId,
+        AuditLogger $auditLogger,
+    ): void {
+        $beforeStageId = (int) $opportunity->opportunity_stage_id;
+        if ($beforeStageId === $targetStageId) {
+            return;
+        }
+
+        $opportunity->update([
+            'opportunity_stage_id' => $targetStageId,
+        ]);
+
+        $this->ensureStageFollowUpTask($opportunity);
+
+        $auditLogger->log(
+            userId: $actorUserId,
+            entityType: Opportunity::class,
+            entityId: $opportunity->id,
+            action: 'opportunity_stage_changed',
+            payload: [
+                'from_stage' => $this->stageName($beforeStageId),
+                'to_stage' => $this->stageName($targetStageId),
+            ],
+        );
+    }
+
+    private function ensureStageFollowUpTask(Opportunity $opportunity): void
+    {
+        $hasOpenStageTask = CrmTask::query()
+            ->where('opportunity_id', $opportunity->id)
+            ->where('task_type', 'stage_follow_up')
+            ->whereNull('completed_at')
+            ->exists();
+
+        if ($hasOpenStageTask) {
+            return;
+        }
+
+        CrmTask::query()->create([
+            'opportunity_id' => $opportunity->id,
+            'assigned_user_id' => $opportunity->owner_user_id,
+            'title' => 'Asama degisimi sonrasi takip gorevi',
+            'priority' => 'high',
+            'task_type' => 'stage_follow_up',
+            'due_at' => now()->addDay(),
+        ]);
+    }
+
+    private function stageName(int $stageId): string
+    {
+        return (string) (
+            OpportunityStage::query()
+                ->whereKey($stageId)
+                ->value('name')
+            ?? 'Belirsiz'
+        );
     }
 }

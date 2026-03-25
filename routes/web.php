@@ -23,6 +23,10 @@ Route::middleware('auth')->group(function () {
     Route::get('/search/global', SearchController::class);
     Route::get('/reports/pipeline', [ReportController::class, 'pipeline']);
     Route::get('/reports/forecast', [ReportController::class, 'forecast']);
+    Route::get('/reports/funnel', [ReportController::class, 'funnel']);
+    Route::get('/reports/sales-cycle', [ReportController::class, 'salesCycle']);
+    Route::get('/reports/performance', [ReportController::class, 'performance']);
+    Route::get('/reports/data-quality', [ReportController::class, 'dataQuality']);
 
     Route::resource('roles', RoleController::class)
         ->except(['show', 'destroy']);

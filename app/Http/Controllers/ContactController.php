@@ -8,6 +8,8 @@ use App\Models\Company;
 use App\Models\Contact;
 use App\Models\User;
 use App\Services\Actions\BestNextActionService;
+use App\Services\Timeline\ActivityTimelineService;
+use App\Services\Validation\DuplicateRecordService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
@@ -45,8 +47,11 @@ class ContactController extends Controller
         ]);
     }
 
-    public function show(Contact $contact, BestNextActionService $bestNextActionService): View
-    {
+    public function show(
+        Contact $contact,
+        BestNextActionService $bestNextActionService,
+        ActivityTimelineService $activityTimelineService,
+    ): View {
         $this->authorize('view', $contact);
 
         $contact = $contact->load([
@@ -64,6 +69,7 @@ class ContactController extends Controller
         return view('contacts.show', [
             'contact' => $contact,
             'bestNextAction' => $bestNextActionService->forContact($contact),
+            'timelineEvents' => $activityTimelineService->forContact($contact),
         ]);
     }
 
@@ -78,16 +84,46 @@ class ContactController extends Controller
         ]);
     }
 
-    public function store(StoreContactRequest $request): RedirectResponse
-    {
-        Contact::query()->create($request->validated());
+    public function store(
+        StoreContactRequest $request,
+        DuplicateRecordService $duplicateRecordService,
+    ): RedirectResponse {
+        $validated = $request->validated();
+        $warnings = $duplicateRecordService->contactWarnings(
+            email: $validated['email'] ?? null,
+            phone: $validated['phone'] ?? null,
+        );
+
+        if ($warnings !== []) {
+            return back()
+                ->withInput()
+                ->withErrors(['duplicate' => implode(' ', $warnings)]);
+        }
+
+        Contact::query()->create($validated);
 
         return redirect('/contacts')->with('status', 'Kisi kaydedildi.');
     }
 
-    public function update(UpdateContactRequest $request, Contact $contact): RedirectResponse
-    {
-        $contact->update($request->validated());
+    public function update(
+        UpdateContactRequest $request,
+        Contact $contact,
+        DuplicateRecordService $duplicateRecordService,
+    ): RedirectResponse {
+        $validated = $request->validated();
+        $warnings = $duplicateRecordService->contactWarnings(
+            email: $validated['email'] ?? null,
+            phone: $validated['phone'] ?? null,
+            ignoreContactId: $contact->id,
+        );
+
+        if ($warnings !== []) {
+            return back()
+                ->withInput()
+                ->withErrors(['duplicate' => implode(' ', $warnings)]);
+        }
+
+        $contact->update($validated);
 
         return redirect('/contacts')->with('status', 'Kisi guncellendi.');
     }

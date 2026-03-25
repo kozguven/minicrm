@@ -95,6 +95,44 @@ class AuditLogTest extends TestCase
         ], json_decode((string) $payload, true));
     }
 
+    public function test_opportunity_stage_change_records_audit_log(): void
+    {
+        Permission::factory()->createMany([
+            ['key' => 'opportunities.edit'],
+        ]);
+
+        $user = $this->userWithPermissions(['opportunities.edit']);
+        $fromStage = OpportunityStage::factory()->create(['name' => 'Yeni']);
+        $toStage = OpportunityStage::factory()->create(['name' => 'Teklif']);
+        $opportunity = Opportunity::factory()->create([
+            'opportunity_stage_id' => $fromStage->id,
+        ]);
+
+        $this->actingAs($user)
+            ->patch("/opportunities/{$opportunity->id}/stage", [
+                'opportunity_stage_id' => $toStage->id,
+            ])
+            ->assertRedirect('/today');
+
+        $this->assertDatabaseHas('audit_logs', [
+            'user_id' => $user->id,
+            'entity_type' => Opportunity::class,
+            'entity_id' => $opportunity->id,
+            'action' => 'opportunity_stage_changed',
+        ]);
+
+        $payload = DB::table('audit_logs')
+            ->where('entity_type', Opportunity::class)
+            ->where('entity_id', $opportunity->id)
+            ->where('action', 'opportunity_stage_changed')
+            ->value('payload');
+
+        $this->assertEquals([
+            'from_stage' => 'Yeni',
+            'to_stage' => 'Teklif',
+        ], json_decode((string) $payload, true));
+    }
+
     /**
      * @param  list<string>  $permissionKeys
      */

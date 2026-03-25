@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Http\Requests\StoreCompanyRequest;
 use App\Http\Requests\UpdateCompanyRequest;
 use App\Models\Company;
+use App\Services\Validation\DuplicateRecordService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
@@ -67,16 +68,46 @@ class CompanyController extends Controller
         ]);
     }
 
-    public function store(StoreCompanyRequest $request): RedirectResponse
-    {
-        Company::query()->create($request->validated());
+    public function store(
+        StoreCompanyRequest $request,
+        DuplicateRecordService $duplicateRecordService,
+    ): RedirectResponse {
+        $validated = $request->validated();
+        $warnings = $duplicateRecordService->companyWarnings(
+            name: (string) $validated['name'],
+            website: $validated['website'] ?? null,
+        );
+
+        if ($warnings !== []) {
+            return back()
+                ->withInput()
+                ->withErrors(['duplicate' => implode(' ', $warnings)]);
+        }
+
+        Company::query()->create($validated);
 
         return redirect('/companies');
     }
 
-    public function update(UpdateCompanyRequest $request, Company $company): RedirectResponse
-    {
-        $company->update($request->validated());
+    public function update(
+        UpdateCompanyRequest $request,
+        Company $company,
+        DuplicateRecordService $duplicateRecordService,
+    ): RedirectResponse {
+        $validated = $request->validated();
+        $warnings = $duplicateRecordService->companyWarnings(
+            name: (string) $validated['name'],
+            website: $validated['website'] ?? null,
+            ignoreCompanyId: $company->id,
+        );
+
+        if ($warnings !== []) {
+            return back()
+                ->withInput()
+                ->withErrors(['duplicate' => implode(' ', $warnings)]);
+        }
+
+        $company->update($validated);
 
         return redirect('/companies')->with('status', 'Sirket guncellendi.');
     }

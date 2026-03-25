@@ -556,6 +556,20 @@ a {
     margin-bottom: 0.5rem;
 }
 
+.kanban-card--draggable {
+    cursor: grab;
+}
+
+.kanban-card--draggable.is-dragging {
+    opacity: 0.55;
+    cursor: grabbing;
+}
+
+.kanban-column.is-drop-target {
+    border-color: color-mix(in srgb, var(--crm-primary) 36%, white);
+    background: color-mix(in srgb, var(--crm-primary-soft) 58%, white);
+}
+
 .command-palette {
     position: fixed;
     inset: 0;

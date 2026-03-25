@@ -47,6 +47,26 @@
                 <p class="muted">{{ $bestNextAction }}</p>
             </article>
 
+            <section class="surface-stack">
+                <h2 class="section-title">Aktivite Zaman Cizgisi</h2>
+
+                @if ($timelineEvents->isEmpty())
+                    <x-ui.empty-state>Bu kisi icin zaman cizgisi olayi bulunmuyor.</x-ui.empty-state>
+                @else
+                    <div class="content-list">
+                        @foreach ($timelineEvents as $event)
+                            <article class="content-card">
+                                <div class="content-card__header">
+                                    <h3 class="content-card__title">{{ $event['title'] }}</h3>
+                                    <span class="muted">{{ $event['occurred_at']->format('d.m.Y H:i') }}</span>
+                                </div>
+                                <p class="muted">{{ $event['detail'] }}</p>
+                            </article>
+                        @endforeach
+                    </div>
+                @endif
+            </section>
+
             <section class="surface-stack" id="gorusmeler">
                 <h2 class="section-title">Görüşme Geçmişi</h2>
 

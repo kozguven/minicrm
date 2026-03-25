@@ -18,31 +18,52 @@ class TodayPriorityService
     {
         $sections = [
             [
+                'type' => 'critical_follow_up',
+                'title' => 'Kritik Takipler',
+                'empty_message' => 'Kritik takip bulunmuyor.',
+                'priority' => 1,
+                'items' => collect(),
+            ],
+            [
+                'type' => 'overdue_next_step',
+                'title' => 'Geciken Next-step',
+                'empty_message' => 'Geciken next-step yok.',
+                'priority' => 2,
+                'items' => collect(),
+            ],
+            [
+                'type' => 'sla_violation',
+                'title' => 'SLA Ihlalleri',
+                'empty_message' => 'SLA ihlali yok.',
+                'priority' => 3,
+                'items' => collect(),
+            ],
+            [
                 'type' => 'call',
                 'title' => 'Aranacak Kişiler',
                 'empty_message' => 'Bugün için aranacak kişi yok.',
-                'priority' => 1,
+                'priority' => 4,
                 'items' => collect(),
             ],
             [
                 'type' => 'critical_opportunity',
                 'title' => 'Kritik Fırsatlar',
                 'empty_message' => 'Bugün için kritik fırsat yok.',
-                'priority' => 2,
+                'priority' => 5,
                 'items' => collect(),
             ],
             [
                 'type' => 'overdue_task',
                 'title' => 'Geciken Görevler',
                 'empty_message' => 'Geciken görev yok.',
-                'priority' => 3,
+                'priority' => 6,
                 'items' => collect(),
             ],
             [
                 'type' => 'due_follow_up',
                 'title' => 'Takip Edilecek Görüşmeler',
                 'empty_message' => 'Takip bekleyen görüşme yok.',
-                'priority' => 4,
+                'priority' => 7,
                 'items' => collect(),
             ],
         ];
@@ -50,7 +71,40 @@ class TodayPriorityService
         $today = Carbon::today()->toDateString();
         $now = Carbon::now();
 
-        $sections[0]['items'] = Contact::query()
+        $sections[0]['items'] = ContactInteraction::query()
+            ->with(['contact.company', 'user'])
+            ->whereNotNull('follow_up_due_at')
+            ->whereNull('follow_up_completed_at')
+            ->where('follow_up_due_at', '<=', $now)
+            ->whereHas('contact', function ($query): void {
+                $query
+                    ->where('priority', 'high')
+                    ->orWhereHas('opportunities', fn ($opportunityQuery) => $opportunityQuery
+                        ->whereDoesntHave('deal')
+                        ->where('health_status', 'risk'));
+            })
+            ->orderBy('follow_up_due_at')
+            ->orderByDesc('happened_at')
+            ->get();
+
+        $sections[1]['items'] = Opportunity::query()
+            ->with(['contact.company', 'opportunityStage'])
+            ->whereDoesntHave('deal')
+            ->whereNotNull('next_step_due_at')
+            ->where('next_step_due_at', '<', $now)
+            ->orderBy('next_step_due_at')
+            ->orderByDesc('value')
+            ->get();
+
+        $sections[2]['items'] = CrmTask::query()
+            ->with(['opportunity.contact.company'])
+            ->where('task_type', 'sla_follow_up')
+            ->whereNull('completed_at')
+            ->orderBy('due_at')
+            ->orderByDesc('id')
+            ->get();
+
+        $sections[3]['items'] = Contact::query()
             ->with([
                 'company',
                 'opportunities' => fn ($query) => $query
@@ -67,7 +121,7 @@ class TodayPriorityService
             ->orderBy('last_name')
             ->get();
 
-        $sections[1]['items'] = Opportunity::query()
+        $sections[4]['items'] = Opportunity::query()
             ->with(['contact.company', 'opportunityStage'])
             ->whereDate('expected_close_date', '<', $today)
             ->whereDoesntHave('deal')
@@ -76,7 +130,7 @@ class TodayPriorityService
             ->orderBy('title')
             ->get();
 
-        $sections[2]['items'] = CrmTask::query()
+        $sections[5]['items'] = CrmTask::query()
             ->with(['opportunity.contact.company'])
             ->whereNull('completed_at')
             ->whereNotNull('due_at')
@@ -85,7 +139,7 @@ class TodayPriorityService
             ->orderBy('title')
             ->get();
 
-        $sections[3]['items'] = ContactInteraction::query()
+        $sections[6]['items'] = ContactInteraction::query()
             ->with(['contact.company', 'user'])
             ->whereNotNull('follow_up_due_at')
             ->whereNull('follow_up_completed_at')

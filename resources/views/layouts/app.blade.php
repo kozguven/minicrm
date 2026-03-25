@@ -127,6 +127,10 @@
                     <a class="command-palette__item" href="/opportunities/kanban" data-command-item>Pipeline Kanban</a>
                     <a class="command-palette__item" href="/reports/pipeline" data-command-item>Pipeline Raporu</a>
                     <a class="command-palette__item" href="/reports/forecast" data-command-item>Tahmin Paneli</a>
+                    <a class="command-palette__item" href="/reports/funnel" data-command-item>Funnel Raporu</a>
+                    <a class="command-palette__item" href="/reports/sales-cycle" data-command-item>Satis Dongusu</a>
+                    <a class="command-palette__item" href="/reports/performance" data-command-item>Kullanici Performansi</a>
+                    <a class="command-palette__item" href="/reports/data-quality" data-command-item>Veri Kalite Paneli</a>
                 </div>
             </div>
         </div>
