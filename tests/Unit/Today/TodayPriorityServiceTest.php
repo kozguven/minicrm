@@ -3,12 +3,15 @@
 namespace Tests\Unit\Today;
 
 use App\Models\Contact;
+use App\Models\ContactInteraction;
 use App\Models\CrmTask;
 use App\Models\Opportunity;
 use App\Models\OpportunityStage;
 use App\Services\Today\TodayPriorityService;
+use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Schema;
 use Tests\TestCase;
 
 class TodayPriorityServiceTest extends TestCase
@@ -164,5 +167,42 @@ class TodayPriorityServiceTest extends TestCase
         $sections = app(TodayPriorityService::class)->build();
 
         $this->assertSame([$eligibleTask->id], $sections[5]['items']->pluck('id')->all());
+    }
+
+    public function test_build_is_resilient_when_contact_priority_and_opportunity_health_columns_are_missing(): void
+    {
+        Carbon::setTestNow('2026-03-23 10:00:00');
+
+        $stage = OpportunityStage::factory()->create(['name' => 'Teklif', 'position' => 1]);
+        $contact = Contact::factory()->create([
+            'first_name' => 'Aylin',
+            'last_name' => 'Demir',
+            'phone' => '+90 555 111 22 33',
+        ]);
+
+        Opportunity::factory()->create([
+            'contact_id' => $contact->id,
+            'opportunity_stage_id' => $stage->id,
+            'expected_close_date' => '2026-03-25',
+        ]);
+
+        $interaction = ContactInteraction::factory()->create([
+            'contact_id' => $contact->id,
+            'follow_up_due_at' => Carbon::parse('2026-03-23 09:00:00'),
+            'follow_up_completed_at' => null,
+            'happened_at' => Carbon::parse('2026-03-23 08:00:00'),
+        ]);
+
+        Schema::table('contacts', function (Blueprint $table): void {
+            $table->dropColumn('priority');
+        });
+
+        Schema::table('opportunities', function (Blueprint $table): void {
+            $table->dropColumn('health_status');
+        });
+
+        $sections = app(TodayPriorityService::class)->build();
+
+        $this->assertSame([$interaction->id], $sections[0]['items']->pluck('id')->all());
     }
 }

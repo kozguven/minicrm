@@ -8,6 +8,7 @@ use App\Models\CrmTask;
 use App\Models\Opportunity;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Schema;
 
 class TodayPriorityService
 {
@@ -70,18 +71,32 @@ class TodayPriorityService
 
         $today = Carbon::today()->toDateString();
         $now = Carbon::now();
+        $hasContactPriority = Schema::hasColumn('contacts', 'priority');
+        $hasOpportunityHealth = Schema::hasColumn('opportunities', 'health_status');
 
         $sections[0]['items'] = ContactInteraction::query()
             ->with(['contact.company', 'user'])
             ->whereNotNull('follow_up_due_at')
             ->whereNull('follow_up_completed_at')
             ->where('follow_up_due_at', '<=', $now)
-            ->whereHas('contact', function ($query): void {
-                $query
-                    ->where('priority', 'high')
-                    ->orWhereHas('opportunities', fn ($opportunityQuery) => $opportunityQuery
-                        ->whereDoesntHave('deal')
-                        ->where('health_status', 'risk'));
+            ->whereHas('contact', function ($query) use ($hasContactPriority, $hasOpportunityHealth): void {
+                $query->where(function ($criticalQuery) use ($hasContactPriority, $hasOpportunityHealth): void {
+                    if ($hasContactPriority) {
+                        $criticalQuery->where('priority', 'high');
+                    }
+
+                    if ($hasOpportunityHealth) {
+                        $method = $hasContactPriority ? 'orWhereHas' : 'whereHas';
+                        $criticalQuery->{$method}('opportunities', fn ($opportunityQuery) => $opportunityQuery
+                            ->whereDoesntHave('deal')
+                            ->where('health_status', 'risk'));
+                    }
+
+                    if (! $hasContactPriority && ! $hasOpportunityHealth) {
+                        $criticalQuery->whereHas('opportunities', fn ($opportunityQuery) => $opportunityQuery
+                            ->whereDoesntHave('deal'));
+                    }
+                });
             })
             ->orderBy('follow_up_due_at')
             ->orderByDesc('happened_at')
