@@ -8,7 +8,9 @@ use App\Http\Controllers\CrmTaskController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\DealController;
 use App\Http\Controllers\OpportunityController;
+use App\Http\Controllers\ReportController;
 use App\Http\Controllers\RoleController;
+use App\Http\Controllers\SearchController;
 use App\Http\Controllers\TeamController;
 use App\Http\Controllers\TodayController;
 use Illuminate\Support\Facades\Route;
@@ -18,6 +20,9 @@ Route::redirect('/', '/today');
 Route::middleware('auth')->group(function () {
     Route::get('/dashboard', DashboardController::class);
     Route::get('/today', TodayController::class);
+    Route::get('/search/global', SearchController::class);
+    Route::get('/reports/pipeline', [ReportController::class, 'pipeline']);
+    Route::get('/reports/forecast', [ReportController::class, 'forecast']);
 
     Route::resource('roles', RoleController::class)
         ->except(['show', 'destroy']);
@@ -40,6 +45,8 @@ Route::middleware('auth')->group(function () {
 
     Route::get('/opportunities', [OpportunityController::class, 'index']);
     Route::get('/opportunities/create', [OpportunityController::class, 'create']);
+    Route::get('/opportunities/kanban', [OpportunityController::class, 'kanban']);
+    Route::patch('/opportunities/bulk-stage', [OpportunityController::class, 'bulkStage']);
     Route::get('/opportunities/{opportunity}/edit', [OpportunityController::class, 'edit']);
     Route::get('/opportunities/{opportunity}', [OpportunityController::class, 'show']);
     Route::post('/opportunities', [OpportunityController::class, 'store']);
@@ -56,6 +63,7 @@ Route::middleware('auth')->group(function () {
 
     Route::get('/tasks', [CrmTaskController::class, 'index']);
     Route::get('/tasks/create', [CrmTaskController::class, 'create']);
+    Route::patch('/tasks/bulk', [CrmTaskController::class, 'bulkUpdate']);
     Route::get('/tasks/{crmTask}/edit', [CrmTaskController::class, 'edit']);
     Route::get('/tasks/{crmTask}', [CrmTaskController::class, 'show']);
     Route::post('/tasks', [CrmTaskController::class, 'store']);

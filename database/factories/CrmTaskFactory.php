@@ -20,7 +20,10 @@ class CrmTaskFactory extends Factory
     {
         return [
             'opportunity_id' => Opportunity::factory(),
+            'assigned_user_id' => null,
             'title' => fake()->sentence(4),
+            'priority' => fake()->randomElement(['low', 'medium', 'high']),
+            'task_type' => 'manual',
             'due_at' => fake()->optional()->dateTimeBetween('now', '+2 weeks'),
             'completed_at' => null,
         ];

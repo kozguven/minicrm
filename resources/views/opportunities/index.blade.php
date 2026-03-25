@@ -8,6 +8,7 @@
                 title="Fırsatlar"
                 subtitle="Potansiyel satışları aşama bazlı takip edin ve boru hattını güncel tutun."
             >
+                <a class="btn btn-ghost" href="{{ url('/opportunities/kanban') }}">Kanban</a>
                 @can('create', \App\Models\Opportunity::class)
                     <a class="btn btn-primary" href="{{ url('/opportunities/create') }}">Yeni Fırsat</a>
                 @endcan
@@ -26,11 +27,52 @@
                     >
                 </div>
 
+                <div class="field" style="flex: 1 1 180px;">
+                    <label class="field-label" for="stage-filter">Aşama</label>
+                    <select class="select" id="stage-filter" name="stage_id">
+                        <option value="">Tümü</option>
+                        @foreach ($stages as $stage)
+                            <option value="{{ $stage->id }}" @selected((string) $stage->id === $filters['stage_id'])>
+                                {{ $stage->name }}
+                            </option>
+                        @endforeach
+                    </select>
+                </div>
+
+                <div class="field" style="flex: 1 1 180px;">
+                    <label class="field-label" for="sort-filter">Sıralama</label>
+                    <select class="select" id="sort-filter" name="sort">
+                        <option value="expected_close_desc" @selected($filters['sort'] === 'expected_close_desc')>Kapanış (Yeni)</option>
+                        <option value="expected_close_asc" @selected($filters['sort'] === 'expected_close_asc')>Kapanış (Eski)</option>
+                        <option value="value_desc" @selected($filters['sort'] === 'value_desc')>Tutar (Yüksek)</option>
+                        <option value="value_asc" @selected($filters['sort'] === 'value_asc')>Tutar (Düşük)</option>
+                        <option value="title_asc" @selected($filters['sort'] === 'title_asc')>Başlık (A-Z)</option>
+                    </select>
+                </div>
+
                 <button class="btn btn-secondary" type="submit">Uygula</button>
-                @if ($filters['q'] !== '')
+                @if ($filters['q'] !== '' || $filters['stage_id'] !== '' || $filters['sort'] !== 'expected_close_desc')
                     <a class="btn btn-ghost" href="{{ url('/opportunities') }}">Temizle</a>
                 @endif
             </form>
+
+            @can('create', \App\Models\Opportunity::class)
+                <form id="bulk-stage-form" method="POST" action="{{ url('/opportunities/bulk-stage') }}" class="inline-actions">
+                    @csrf
+                    @method('PATCH')
+
+                    <div class="field" style="flex: 1 1 220px;">
+                        <label class="field-label" for="bulk-opportunity-stage">Toplu Aşama</label>
+                        <select class="select" id="bulk-opportunity-stage" name="opportunity_stage_id" required>
+                            @foreach ($stages as $stage)
+                                <option value="{{ $stage->id }}">{{ $stage->name }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+
+                    <button class="btn btn-secondary" type="submit">Seçili Fırsatları Güncelle</button>
+                </form>
+            @endcan
 
             @if ($errors->any())
                 <x-ui.notice tone="danger">
@@ -49,6 +91,19 @@
                             <div class="surface-stack" style="gap: 0.7rem;">
                                 <div class="content-card__header">
                                     <div>
+                                        @can('update', $opportunity)
+                                            <label class="checkbox-row" style="margin-bottom: 0.35rem;">
+                                                <input
+                                                    class="checkbox"
+                                                    type="checkbox"
+                                                    name="opportunity_ids[]"
+                                                    value="{{ $opportunity->id }}"
+                                                    form="bulk-stage-form"
+                                                >
+                                                <span>Toplu işleme ekle</span>
+                                            </label>
+                                        @endcan
+
                                         <h2 class="content-card__title">{{ $opportunity->title }}</h2>
                                         <p class="muted">
                                             {{ $opportunity->contact?->first_name }} {{ $opportunity->contact?->last_name }}
@@ -70,6 +125,12 @@
                                 </div>
 
                                 <p class="muted">Beklenen kapanış: {{ $opportunity->expected_close_date ?: 'Belirlenmedi' }}</p>
+                                <p class="muted">
+                                    Sonraki adım: {{ $opportunity->next_step ?: 'Belirtilmedi' }}
+                                    @if ($opportunity->next_step_due_at)
+                                        · {{ $opportunity->next_step_due_at->format('d.m.Y H:i') }}
+                                    @endif
+                                </p>
 
                                 @if ($opportunity->deal)
                                     <x-ui.notice tone="success">
@@ -110,6 +171,8 @@
                         </article>
                     @endforeach
                 </div>
+
+                {{ $opportunities->links() }}
             @endif
         </div>
     </x-ui.panel>

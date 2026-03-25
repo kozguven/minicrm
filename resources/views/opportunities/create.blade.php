@@ -58,8 +58,44 @@
                 </div>
 
                 <div class="field">
+                    <label class="field-label" for="owner_user_id">Sorumlu Kullanıcı</label>
+                    <select class="select" id="owner_user_id" name="owner_user_id">
+                        <option value="">Atama yok</option>
+                        @foreach ($users as $user)
+                            <option value="{{ $user->id }}" @selected((string) old('owner_user_id') === (string) $user->id)>
+                                {{ $user->name }}
+                            </option>
+                        @endforeach
+                    </select>
+                </div>
+
+                <div class="field">
+                    <label class="field-label" for="probability">Olasılık (%)</label>
+                    <input class="input" id="probability" name="probability" type="number" min="0" max="100" value="{{ old('probability', 50) }}">
+                </div>
+
+                <div class="field">
                     <label class="field-label" for="expected_close_date">Beklenen Kapanış Tarihi</label>
                     <input class="input" id="expected_close_date" name="expected_close_date" type="date" value="{{ old('expected_close_date') }}">
+                </div>
+
+                <div class="field">
+                    <label class="field-label" for="next_step">Sonraki Adım</label>
+                    <input class="input" id="next_step" name="next_step" type="text" value="{{ old('next_step') }}">
+                </div>
+
+                <div class="field">
+                    <label class="field-label" for="next_step_due_at">Sonraki Adım Tarihi</label>
+                    <input class="input" id="next_step_due_at" name="next_step_due_at" type="datetime-local" value="{{ old('next_step_due_at') }}">
+                </div>
+
+                <div class="field">
+                    <label class="field-label" for="health_status">Sağlık Durumu</label>
+                    <select class="select" id="health_status" name="health_status">
+                        <option value="commit" @selected(old('health_status') === 'commit')>Commit</option>
+                        <option value="watch" @selected(old('health_status', 'watch') === 'watch')>Watch</option>
+                        <option value="risk" @selected(old('health_status') === 'risk')>Risk</option>
+                    </select>
                 </div>
 
                 <div class="inline-actions">

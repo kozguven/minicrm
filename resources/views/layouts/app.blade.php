@@ -27,6 +27,7 @@
                 ['label' => 'Fırsatlar', 'href' => '/opportunities', 'patterns' => ['opportunities', 'opportunities/*']],
                 ['label' => 'Görevler', 'href' => '/tasks', 'patterns' => ['tasks', 'tasks/*']],
                 ['label' => 'Anlaşmalar', 'href' => '/deals', 'patterns' => ['deals', 'deals/*']],
+                ['label' => 'Raporlar', 'href' => '/reports/pipeline', 'patterns' => ['reports', 'reports/*']],
             ];
 
             if ($user->isAdmin()) {
@@ -47,6 +48,8 @@
 
                     <div class="app-header__right">
                         @auth
+                            <button class="btn btn-ghost" type="button" data-command-open>Ctrl/Cmd + K</button>
+
                             @can('create', \App\Models\Opportunity::class)
                                 <a class="btn btn-ghost" href="/opportunities/create">Yeni Fırsat</a>
                             @endcan
@@ -89,5 +92,90 @@
             @yield('content')
         </main>
     </div>
+
+    @auth
+        <div class="command-palette" data-command-palette hidden>
+            <div class="command-palette__backdrop" data-command-close></div>
+            <div class="command-palette__panel" role="dialog" aria-modal="true" aria-label="Komut Paleti">
+                <div class="field">
+                    <label class="field-label" for="command-palette-search">Hızlı Komut</label>
+                    <input
+                        class="input"
+                        id="command-palette-search"
+                        type="text"
+                        placeholder="Komut veya sayfa ara..."
+                        data-command-input
+                    >
+                </div>
+
+                <div class="command-palette__list" data-command-list>
+                    <a class="command-palette__item" href="/search/global" data-command-item>Global Arama</a>
+
+                    @can('create', \App\Models\Company::class)
+                        <a class="command-palette__item" href="/companies/create" data-command-item>Yeni Şirket</a>
+                    @endcan
+                    @can('create', \App\Models\Contact::class)
+                        <a class="command-palette__item" href="/contacts/create" data-command-item>Yeni Kişi</a>
+                    @endcan
+                    @can('create', \App\Models\Opportunity::class)
+                        <a class="command-palette__item" href="/opportunities/create" data-command-item>Yeni Fırsat</a>
+                    @endcan
+                    @can('create', \App\Models\CrmTask::class)
+                        <a class="command-palette__item" href="/tasks/create" data-command-item>Yeni Görev</a>
+                    @endcan
+
+                    <a class="command-palette__item" href="/opportunities/kanban" data-command-item>Pipeline Kanban</a>
+                    <a class="command-palette__item" href="/reports/pipeline" data-command-item>Pipeline Raporu</a>
+                    <a class="command-palette__item" href="/reports/forecast" data-command-item>Tahmin Paneli</a>
+                </div>
+            </div>
+        </div>
+
+        <script>
+            (() => {
+                const palette = document.querySelector('[data-command-palette]');
+                if (!palette) return;
+
+                const input = palette.querySelector('[data-command-input]');
+                const items = Array.from(palette.querySelectorAll('[data-command-item]'));
+                const openButton = document.querySelector('[data-command-open]');
+
+                const setOpen = (open) => {
+                    palette.hidden = !open;
+                    if (open) {
+                        input.value = '';
+                        items.forEach((item) => {
+                            item.hidden = false;
+                        });
+                        setTimeout(() => input.focus(), 0);
+                    }
+                };
+
+                openButton?.addEventListener('click', () => setOpen(true));
+                palette.querySelectorAll('[data-command-close]').forEach((element) => {
+                    element.addEventListener('click', () => setOpen(false));
+                });
+
+                input?.addEventListener('input', () => {
+                    const query = input.value.trim().toLowerCase();
+
+                    items.forEach((item) => {
+                        item.hidden = query !== '' && !item.textContent.toLowerCase().includes(query);
+                    });
+                });
+
+                document.addEventListener('keydown', (event) => {
+                    if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 'k') {
+                        event.preventDefault();
+                        setOpen(true);
+                    }
+
+                    if (event.key === 'Escape' && !palette.hidden) {
+                        setOpen(false);
+                    }
+                });
+            })();
+        </script>
+    @endauth
 </body>
 </html>

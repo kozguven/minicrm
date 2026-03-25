@@ -6,6 +6,8 @@ use App\Http\Requests\StoreContactRequest;
 use App\Http\Requests\UpdateContactRequest;
 use App\Models\Company;
 use App\Models\Contact;
+use App\Models\User;
+use App\Services\Actions\BestNextActionService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
@@ -43,31 +45,25 @@ class ContactController extends Controller
         ]);
     }
 
-    public function create(): View
-    {
-        $this->authorize('create', Contact::class);
-
-        return view('contacts.create', [
-            'companies' => Company::query()->orderBy('name')->get(),
-        ]);
-    }
-
-    public function show(Contact $contact): View
+    public function show(Contact $contact, BestNextActionService $bestNextActionService): View
     {
         $this->authorize('view', $contact);
 
+        $contact = $contact->load([
+            'company',
+            'opportunities' => fn ($query) => $query
+                ->with(['opportunityStage', 'deal'])
+                ->orderByDesc('expected_close_date')
+                ->orderBy('title'),
+            'contactInteractions' => fn ($query) => $query
+                ->with('user')
+                ->orderByDesc('happened_at')
+                ->orderByDesc('id'),
+        ]);
+
         return view('contacts.show', [
-            'contact' => $contact->load([
-                'company',
-                'opportunities' => fn ($query) => $query
-                    ->with(['opportunityStage', 'deal'])
-                    ->orderByDesc('expected_close_date')
-                    ->orderBy('title'),
-                'contactInteractions' => fn ($query) => $query
-                    ->with('user')
-                    ->orderByDesc('happened_at')
-                    ->orderByDesc('id'),
-            ]),
+            'contact' => $contact,
+            'bestNextAction' => $bestNextActionService->forContact($contact),
         ]);
     }
 
@@ -78,6 +74,7 @@ class ContactController extends Controller
         return view('contacts.edit', [
             'contact' => $contact,
             'companies' => Company::query()->orderBy('name')->get(),
+            'users' => User::query()->orderBy('name')->get(),
         ]);
     }
 
@@ -85,7 +82,7 @@ class ContactController extends Controller
     {
         Contact::query()->create($request->validated());
 
-        return redirect('/contacts');
+        return redirect('/contacts')->with('status', 'Kisi kaydedildi.');
     }
 
     public function update(UpdateContactRequest $request, Contact $contact): RedirectResponse
@@ -93,5 +90,15 @@ class ContactController extends Controller
         $contact->update($request->validated());
 
         return redirect('/contacts')->with('status', 'Kisi guncellendi.');
+    }
+
+    public function create(): View
+    {
+        $this->authorize('create', Contact::class);
+
+        return view('contacts.create', [
+            'companies' => Company::query()->orderBy('name')->get(),
+            'users' => User::query()->orderBy('name')->get(),
+        ]);
     }
 }

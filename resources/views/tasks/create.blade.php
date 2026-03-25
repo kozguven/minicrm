@@ -44,6 +44,36 @@
                 </div>
 
                 <div class="field">
+                    <label class="field-label" for="assigned_user_id">Atanan Kullanıcı</label>
+                    <select class="select" id="assigned_user_id" name="assigned_user_id">
+                        <option value="">Atama yok</option>
+                        @foreach ($users as $user)
+                            <option value="{{ $user->id }}" @selected((string) old('assigned_user_id') === (string) $user->id)>
+                                {{ $user->name }}
+                            </option>
+                        @endforeach
+                    </select>
+                </div>
+
+                <div class="field">
+                    <label class="field-label" for="priority">Öncelik</label>
+                    <select class="select" id="priority" name="priority">
+                        <option value="high" @selected(old('priority') === 'high')>Yüksek</option>
+                        <option value="medium" @selected(old('priority', 'medium') === 'medium')>Orta</option>
+                        <option value="low" @selected(old('priority') === 'low')>Düşük</option>
+                    </select>
+                </div>
+
+                <div class="field">
+                    <label class="field-label" for="task_type">Görev Tipi</label>
+                    <select class="select" id="task_type" name="task_type">
+                        <option value="manual" @selected(old('task_type', 'manual') === 'manual')>Manual</option>
+                        <option value="stage_follow_up" @selected(old('task_type') === 'stage_follow_up')>Aşama Takibi</option>
+                        <option value="sla_follow_up" @selected(old('task_type') === 'sla_follow_up')>SLA Takibi</option>
+                    </select>
+                </div>
+
+                <div class="field">
                     <label class="field-label" for="due_at">Termin</label>
                     <input class="input" id="due_at" name="due_at" type="datetime-local" value="{{ old('due_at') }}">
                 </div>

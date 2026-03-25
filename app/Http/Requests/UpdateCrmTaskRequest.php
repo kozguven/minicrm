@@ -27,7 +27,10 @@ class UpdateCrmTaskRequest extends FormRequest
     {
         return [
             'opportunity_id' => ['required', 'integer', Rule::exists('opportunities', 'id')],
+            'assigned_user_id' => ['nullable', 'integer', Rule::exists('users', 'id')],
             'title' => ['required', 'string', 'max:255'],
+            'priority' => ['nullable', 'string', Rule::in(['low', 'medium', 'high'])],
+            'task_type' => ['nullable', 'string', Rule::in(['manual', 'sla_follow_up', 'stage_follow_up'])],
             'due_at' => ['nullable', 'date'],
         ];
     }

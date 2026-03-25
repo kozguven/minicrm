@@ -42,6 +42,11 @@
                 <p class="muted">Telefon: {{ $contact->phone ?: 'Eklenmedi' }}</p>
             </article>
 
+            <article class="content-card">
+                <h2 class="section-title">Sonraki En Iyi Aksiyon</h2>
+                <p class="muted">{{ $bestNextAction }}</p>
+            </article>
+
             <section class="surface-stack" id="gorusmeler">
                 <h2 class="section-title">Görüşme Geçmişi</h2>
 

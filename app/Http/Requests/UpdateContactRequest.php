@@ -27,10 +27,15 @@ class UpdateContactRequest extends FormRequest
     {
         return [
             'company_id' => ['required', 'integer', Rule::exists('companies', 'id')],
+            'owner_user_id' => ['nullable', 'integer', Rule::exists('users', 'id')],
             'first_name' => ['required', 'string', 'max:255'],
             'last_name' => ['required', 'string', 'max:255'],
             'email' => ['nullable', 'email', 'max:255'],
             'phone' => ['nullable', 'string', 'max:255'],
+            'lead_source' => ['nullable', 'string', 'max:64'],
+            'lead_status' => ['nullable', 'string', Rule::in(['new', 'qualified', 'contacted', 'lost'])],
+            'priority' => ['nullable', 'string', Rule::in(['low', 'medium', 'high'])],
+            'last_contacted_at' => ['nullable', 'date'],
         ];
     }
 }

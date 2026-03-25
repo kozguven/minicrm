@@ -20,10 +20,15 @@ class ContactFactory extends Factory
     {
         return [
             'company_id' => Company::factory(),
+            'owner_user_id' => null,
             'first_name' => fake()->firstName(),
             'last_name' => fake()->lastName(),
             'email' => fake()->unique()->safeEmail(),
             'phone' => fake()->phoneNumber(),
+            'lead_source' => fake()->randomElement(['website', 'referral', 'event', 'other']),
+            'lead_status' => fake()->randomElement(['new', 'qualified', 'contacted']),
+            'priority' => fake()->randomElement(['low', 'medium', 'high']),
+            'last_contacted_at' => fake()->optional()->dateTimeBetween('-10 days', 'now'),
         ];
     }
 }

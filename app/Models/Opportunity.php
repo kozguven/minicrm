@@ -10,7 +10,18 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 
-#[Fillable(['contact_id', 'opportunity_stage_id', 'title', 'value', 'expected_close_date'])]
+#[Fillable([
+    'contact_id',
+    'owner_user_id',
+    'opportunity_stage_id',
+    'title',
+    'value',
+    'probability',
+    'expected_close_date',
+    'next_step',
+    'next_step_due_at',
+    'health_status',
+])]
 class Opportunity extends Model
 {
     /** @use HasFactory<OpportunityFactory> */
@@ -22,6 +33,14 @@ class Opportunity extends Model
     public function contact(): BelongsTo
     {
         return $this->belongsTo(Contact::class);
+    }
+
+    /**
+     * @return BelongsTo<User, $this>
+     */
+    public function owner(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'owner_user_id');
     }
 
     /**
@@ -46,5 +65,13 @@ class Opportunity extends Model
     public function deal(): HasOne
     {
         return $this->hasOne(Deal::class);
+    }
+
+    protected function casts(): array
+    {
+        return [
+            'probability' => 'integer',
+            'next_step_due_at' => 'datetime',
+        ];
     }
 }

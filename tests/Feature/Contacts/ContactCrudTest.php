@@ -365,18 +365,26 @@ class ContactCrudTest extends TestCase
             'company_id.required' => 'Lutfen bir sirket secin.',
             'company_id.integer' => 'Sirket secimi sayi olmalidir.',
             'company_id.exists' => 'Lutfen gecerli bir sirket secin.',
+            'owner_user_id.exists' => 'Lutfen gecerli bir sorumlu secin.',
             'required' => ':attribute alani zorunludur.',
             'string' => ':attribute metin olmalidir.',
             'max.string' => ':attribute en fazla :max karakter olabilir.',
             'email' => ':attribute gecerli bir e-posta adresi olmalidir.',
+            'date' => ':attribute gecerli bir tarih olmalidir.',
+            'in' => ':attribute degeri gecersiz.',
         ], $request->messages());
 
         $this->assertSame([
             'company_id' => 'Sirket',
+            'owner_user_id' => 'Sorumlu',
             'first_name' => 'Ad',
             'last_name' => 'Soyad',
             'email' => 'E-posta',
             'phone' => 'Telefon',
+            'lead_source' => 'Lead kaynagi',
+            'lead_status' => 'Lead durumu',
+            'priority' => 'Oncelik',
+            'last_contacted_at' => 'Son temas tarihi',
         ], $request->attributes());
     }
 

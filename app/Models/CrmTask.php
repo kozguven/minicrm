@@ -8,7 +8,15 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
-#[Fillable(['opportunity_id', 'title', 'due_at', 'completed_at'])]
+#[Fillable([
+    'opportunity_id',
+    'assigned_user_id',
+    'title',
+    'priority',
+    'task_type',
+    'due_at',
+    'completed_at',
+])]
 class CrmTask extends Model
 {
     /** @use HasFactory<CrmTaskFactory> */
@@ -20,6 +28,14 @@ class CrmTask extends Model
     public function opportunity(): BelongsTo
     {
         return $this->belongsTo(Opportunity::class);
+    }
+
+    /**
+     * @return BelongsTo<User, $this>
+     */
+    public function assignedUser(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'assigned_user_id');
     }
 
     protected function casts(): array
