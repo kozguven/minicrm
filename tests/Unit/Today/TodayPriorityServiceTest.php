@@ -205,4 +205,45 @@ class TodayPriorityServiceTest extends TestCase
 
         $this->assertSame([$interaction->id], $sections[0]['items']->pluck('id')->all());
     }
+
+    public function test_build_is_resilient_when_next_step_due_at_column_is_missing(): void
+    {
+        Carbon::setTestNow('2026-03-23 10:00:00');
+
+        $stage = OpportunityStage::factory()->create(['name' => 'Teklif', 'position' => 1]);
+        Opportunity::factory()->create([
+            'opportunity_stage_id' => $stage->id,
+            'title' => 'Takipsiz Firsat',
+        ]);
+
+        Schema::table('opportunities', function (Blueprint $table): void {
+            $table->dropColumn('next_step_due_at');
+        });
+
+        $sections = app(TodayPriorityService::class)->build();
+
+        $this->assertCount(0, $sections[1]['items']);
+    }
+
+    public function test_build_is_resilient_when_task_type_column_is_missing(): void
+    {
+        Carbon::setTestNow('2026-03-23 10:00:00');
+
+        $stage = OpportunityStage::factory()->create(['name' => 'Teklif', 'position' => 1]);
+        CrmTask::factory()->create([
+            'opportunity_id' => Opportunity::factory()->create([
+                'opportunity_stage_id' => $stage->id,
+            ])->id,
+            'task_type' => 'sla_follow_up',
+            'completed_at' => null,
+        ]);
+
+        Schema::table('crm_tasks', function (Blueprint $table): void {
+            $table->dropColumn('task_type');
+        });
+
+        $sections = app(TodayPriorityService::class)->build();
+
+        $this->assertCount(0, $sections[2]['items']);
+    }
 }

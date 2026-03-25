@@ -73,6 +73,8 @@ class TodayPriorityService
         $now = Carbon::now();
         $hasContactPriority = Schema::hasColumn('contacts', 'priority');
         $hasOpportunityHealth = Schema::hasColumn('opportunities', 'health_status');
+        $hasNextStepDueAt = Schema::hasColumn('opportunities', 'next_step_due_at');
+        $hasTaskType = Schema::hasColumn('crm_tasks', 'task_type');
 
         $sections[0]['items'] = ContactInteraction::query()
             ->with(['contact.company', 'user'])
@@ -102,22 +104,26 @@ class TodayPriorityService
             ->orderByDesc('happened_at')
             ->get();
 
-        $sections[1]['items'] = Opportunity::query()
-            ->with(['contact.company', 'opportunityStage'])
-            ->whereDoesntHave('deal')
-            ->whereNotNull('next_step_due_at')
-            ->where('next_step_due_at', '<', $now)
-            ->orderBy('next_step_due_at')
-            ->orderByDesc('value')
-            ->get();
+        $sections[1]['items'] = $hasNextStepDueAt
+            ? Opportunity::query()
+                ->with(['contact.company', 'opportunityStage'])
+                ->whereDoesntHave('deal')
+                ->whereNotNull('next_step_due_at')
+                ->where('next_step_due_at', '<', $now)
+                ->orderBy('next_step_due_at')
+                ->orderByDesc('value')
+                ->get()
+            : collect();
 
-        $sections[2]['items'] = CrmTask::query()
-            ->with(['opportunity.contact.company'])
-            ->where('task_type', 'sla_follow_up')
-            ->whereNull('completed_at')
-            ->orderBy('due_at')
-            ->orderByDesc('id')
-            ->get();
+        $sections[2]['items'] = $hasTaskType
+            ? CrmTask::query()
+                ->with(['opportunity.contact.company'])
+                ->where('task_type', 'sla_follow_up')
+                ->whereNull('completed_at')
+                ->orderBy('due_at')
+                ->orderByDesc('id')
+                ->get()
+            : collect();
 
         $sections[3]['items'] = Contact::query()
             ->with([
