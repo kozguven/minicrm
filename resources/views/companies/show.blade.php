@@ -1,13 +1,16 @@
 @extends('layouts.app')
 
 @section('content')
-    <x-ui.panel size="lg">
+    <x-ui.panel size="xl">
         <div class="surface-stack">
             <x-ui.page-header
                 eyebrow="CRM / Şirketler"
                 title="Şirket Detayı"
                 subtitle="Şirket bilgilerini ve bağlı kişi kayıtlarını buradan takip edin."
             >
+                @can('update', $company)
+                    <a class="btn btn-ghost" href="{{ url("/companies/{$company->id}/edit") }}">Düzenle</a>
+                @endcan
                 <a class="btn btn-secondary" href="{{ url('/companies') }}">Listeye Dön</a>
             </x-ui.page-header>
 
@@ -31,7 +34,10 @@
                                         <h3 class="content-card__title">{{ $contact->first_name }} {{ $contact->last_name }}</h3>
                                         <p class="muted">{{ $contact->email ?: 'E-posta eklenmedi' }}</p>
                                     </div>
-                                    <a class="btn btn-ghost" href="{{ url("/contacts/{$contact->id}") }}">Detay</a>
+                                    <div class="inline-actions">
+                                        <a class="btn btn-ghost" href="{{ url("/contacts/{$contact->id}") }}">Detay</a>
+                                        <a class="btn btn-ghost" href="/contacts/{{ $contact->id }}#gorusmeler">Görüşmeler</a>
+                                    </div>
                                 </div>
                                 <p class="muted">Fırsat sayısı: {{ $contact->opportunities_count }}</p>
                             </article>

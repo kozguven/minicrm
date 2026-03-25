@@ -3,6 +3,7 @@
 namespace App\Services\Today;
 
 use App\Models\Contact;
+use App\Models\ContactInteraction;
 use App\Models\CrmTask;
 use App\Models\Opportunity;
 use Illuminate\Support\Carbon;
@@ -35,6 +36,13 @@ class TodayPriorityService
                 'title' => 'Geciken Görevler',
                 'empty_message' => 'Geciken görev yok.',
                 'priority' => 3,
+                'items' => collect(),
+            ],
+            [
+                'type' => 'due_follow_up',
+                'title' => 'Takip Edilecek Görüşmeler',
+                'empty_message' => 'Takip bekleyen görüşme yok.',
+                'priority' => 4,
                 'items' => collect(),
             ],
         ];
@@ -75,6 +83,15 @@ class TodayPriorityService
             ->where('due_at', '<', $now)
             ->orderBy('due_at')
             ->orderBy('title')
+            ->get();
+
+        $sections[3]['items'] = ContactInteraction::query()
+            ->with(['contact.company', 'user'])
+            ->whereNotNull('follow_up_due_at')
+            ->whereNull('follow_up_completed_at')
+            ->where('follow_up_due_at', '<=', $now)
+            ->orderBy('follow_up_due_at')
+            ->orderByDesc('happened_at')
             ->get();
 
         usort($sections, fn (array $left, array $right) => $left['priority'] <=> $right['priority']);

@@ -19,10 +19,13 @@ class DealConversionTest extends TestCase
     public function test_guest_cannot_access_deal_flows(): void
     {
         $opportunity = Opportunity::factory()->create();
+        $deal = Deal::factory()->create();
 
         $this->get('/deals')->assertRedirect('/login');
         $this->get('/deals/create')->assertRedirect('/login');
         $this->post('/deals', [])->assertRedirect('/login');
+        $this->get("/deals/{$deal->id}/edit")->assertRedirect('/login');
+        $this->patch("/deals/{$deal->id}", [])->assertRedirect('/login');
         $this->post("/opportunities/{$opportunity->id}/convert")->assertRedirect('/login');
     }
 
@@ -30,6 +33,7 @@ class DealConversionTest extends TestCase
     {
         $user = User::factory()->create();
         $opportunity = Opportunity::factory()->create();
+        $deal = Deal::factory()->create();
 
         $this->actingAs($user)->get('/deals')->assertForbidden();
         $this->actingAs($user)->get('/deals/create')->assertForbidden();
@@ -37,6 +41,11 @@ class DealConversionTest extends TestCase
             'opportunity_id' => $opportunity->id,
             'amount' => '12500',
             'closed_at' => '2026-03-23 10:30:00',
+        ])->assertForbidden();
+        $this->actingAs($user)->get("/deals/{$deal->id}/edit")->assertForbidden();
+        $this->actingAs($user)->patch("/deals/{$deal->id}", [
+            'amount' => '50000',
+            'closed_at' => '2026-03-25 09:00:00',
         ])->assertForbidden();
         $this->actingAs($user)->post("/opportunities/{$opportunity->id}/convert")->assertForbidden();
     }
@@ -182,6 +191,33 @@ class DealConversionTest extends TestCase
         ]);
 
         $this->assertSame(1, Deal::query()->where('opportunity_id', $opportunity->id)->count());
+    }
+
+    public function test_user_with_companies_view_and_create_permissions_can_open_deal_edit_screen_and_update_deal(): void
+    {
+        $user = $this->userWithPermissions(['companies.view', 'companies.create']);
+        $deal = Deal::factory()->create([
+            'amount' => 10000,
+            'closed_at' => '2026-03-20 10:00:00',
+        ]);
+
+        $this->actingAs($user)
+            ->get("/deals/{$deal->id}/edit")
+            ->assertOk()
+            ->assertSeeText('Anlaşmayı Düzenle');
+
+        $this->actingAs($user)
+            ->patch("/deals/{$deal->id}", [
+                'amount' => '23500.40',
+                'closed_at' => '2026-03-26 12:30:00',
+            ])
+            ->assertRedirect('/deals');
+
+        $this->assertDatabaseHas('deals', [
+            'id' => $deal->id,
+            'amount' => '23500.40',
+            'closed_at' => '2026-03-26 12:30:00',
+        ]);
     }
 
     /**

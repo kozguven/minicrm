@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\StoreCrmTaskRequest;
+use App\Http\Requests\UpdateCrmTaskRequest;
 use App\Models\CrmTask;
 use App\Models\Opportunity;
 use Illuminate\Http\RedirectResponse;
@@ -90,6 +91,19 @@ class CrmTaskController extends Controller
         ]);
     }
 
+    public function edit(CrmTask $crmTask): View
+    {
+        $this->authorize('update', $crmTask);
+
+        return view('tasks.edit', [
+            'task' => $crmTask,
+            'opportunities' => Opportunity::query()
+                ->with(['contact.company'])
+                ->orderBy('title')
+                ->get(),
+        ]);
+    }
+
     public function store(StoreCrmTaskRequest $request): RedirectResponse
     {
         CrmTask::query()->create($request->validated());
@@ -112,6 +126,13 @@ class CrmTaskController extends Controller
             'status',
             $wasCompleted ? 'Gorev tekrar acildi.' : 'Gorev tamamlandi.',
         );
+    }
+
+    public function update(UpdateCrmTaskRequest $request, CrmTask $crmTask): RedirectResponse
+    {
+        $crmTask->update($request->validated());
+
+        return redirect('/tasks')->with('status', 'Gorev guncellendi.');
     }
 
     private function successRedirect(Request $request): RedirectResponse

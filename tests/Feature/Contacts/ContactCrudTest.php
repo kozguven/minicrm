@@ -18,6 +18,7 @@ class ContactCrudTest extends TestCase
     public function test_guest_cannot_access_company_or_contact_flows(): void
     {
         $company = Company::factory()->create();
+        $contact = Contact::factory()->create();
 
         $this->get('/companies')->assertRedirect('/login');
         $this->get('/companies/create')->assertRedirect('/login');
@@ -25,10 +26,21 @@ class ContactCrudTest extends TestCase
             'name' => 'Mini CRM Ltd.',
             'website' => 'https://minicrm.test',
         ])->assertRedirect('/login');
+        $this->get("/companies/{$company->id}/edit")->assertRedirect('/login');
+        $this->patch("/companies/{$company->id}", [
+            'name' => 'Mini CRM Updated',
+            'website' => 'https://updated.test',
+        ])->assertRedirect('/login');
 
         $this->get('/contacts')->assertRedirect('/login');
         $this->get('/contacts/create')->assertRedirect('/login');
         $this->post('/contacts', [
+            'company_id' => $company->id,
+            'first_name' => 'Ayse',
+            'last_name' => 'Yilmaz',
+        ])->assertRedirect('/login');
+        $this->get("/contacts/{$contact->id}/edit")->assertRedirect('/login');
+        $this->patch("/contacts/{$contact->id}", [
             'company_id' => $company->id,
             'first_name' => 'Ayse',
             'last_name' => 'Yilmaz',
@@ -39,6 +51,7 @@ class ContactCrudTest extends TestCase
     {
         $user = User::factory()->create();
         $company = Company::factory()->create();
+        $contact = Contact::factory()->create();
 
         $this->actingAs($user)->get('/companies')->assertForbidden();
         $this->actingAs($user)->get('/companies/create')->assertForbidden();
@@ -46,10 +59,21 @@ class ContactCrudTest extends TestCase
             'name' => 'Yetkisiz Sirket',
             'website' => 'https://yetkisiz.test',
         ])->assertForbidden();
+        $this->actingAs($user)->get("/companies/{$company->id}/edit")->assertForbidden();
+        $this->actingAs($user)->patch("/companies/{$company->id}", [
+            'name' => 'Yetkisiz Sirket',
+            'website' => 'https://yetkisiz.test',
+        ])->assertForbidden();
 
         $this->actingAs($user)->get('/contacts')->assertForbidden();
         $this->actingAs($user)->get('/contacts/create')->assertForbidden();
         $this->actingAs($user)->post('/contacts', [
+            'company_id' => $company->id,
+            'first_name' => 'Yetkisiz',
+            'last_name' => 'Kullanici',
+        ])->assertForbidden();
+        $this->actingAs($user)->get("/contacts/{$contact->id}/edit")->assertForbidden();
+        $this->actingAs($user)->patch("/contacts/{$contact->id}", [
             'company_id' => $company->id,
             'first_name' => 'Yetkisiz',
             'last_name' => 'Kullanici',
@@ -64,6 +88,7 @@ class ContactCrudTest extends TestCase
         $this->actingAs($user)
             ->get('/companies')
             ->assertOk()
+            ->assertSee('class="panel panel--xl"', false)
             ->assertSeeText('Şirketler')
             ->assertSeeText('Acme A.S.')
             ->assertSeeText('Yeni Şirket');
@@ -125,6 +150,34 @@ class ContactCrudTest extends TestCase
         ]);
     }
 
+    public function test_user_with_companies_create_permission_can_open_company_edit_screen_and_update_company(): void
+    {
+        $user = $this->userWithPermissions(['companies.create']);
+        $company = Company::factory()->create([
+            'name' => 'Eski Isim',
+            'website' => 'https://eski.test',
+        ]);
+
+        $this->actingAs($user)
+            ->get("/companies/{$company->id}/edit")
+            ->assertOk()
+            ->assertSeeText('Şirketi Düzenle')
+            ->assertSee('value="Eski Isim"', false);
+
+        $this->actingAs($user)
+            ->patch("/companies/{$company->id}", [
+                'name' => 'Yeni Isim',
+                'website' => 'https://yeni.test',
+            ])
+            ->assertRedirect('/companies');
+
+        $this->assertDatabaseHas('companies', [
+            'id' => $company->id,
+            'name' => 'Yeni Isim',
+            'website' => 'https://yeni.test',
+        ]);
+    }
+
     public function test_user_with_companies_view_permission_can_view_contacts_index(): void
     {
         $user = $this->userWithPermissions(['companies.view']);
@@ -139,6 +192,7 @@ class ContactCrudTest extends TestCase
         $this->actingAs($user)
             ->get('/contacts')
             ->assertOk()
+            ->assertSee('class="panel panel--xl"', false)
             ->assertSeeText('Kişiler')
             ->assertSeeText('Ayse Yilmaz')
             ->assertSeeText('Acme A.S.')
@@ -214,6 +268,45 @@ class ContactCrudTest extends TestCase
             'first_name' => 'Ayse',
             'last_name' => 'Yilmaz',
             'email' => 'ayse@example.com',
+        ]);
+    }
+
+    public function test_user_with_companies_create_permission_can_open_contact_edit_screen_and_update_contact(): void
+    {
+        $user = $this->userWithPermissions(['companies.create']);
+        $company = Company::factory()->create(['name' => 'Atlas']);
+        $newCompany = Company::factory()->create(['name' => 'Pera']);
+        $contact = Contact::factory()->create([
+            'company_id' => $company->id,
+            'first_name' => 'Eski',
+            'last_name' => 'Kisi',
+            'email' => 'eski@example.com',
+        ]);
+
+        $this->actingAs($user)
+            ->get("/contacts/{$contact->id}/edit")
+            ->assertOk()
+            ->assertSeeText('Kişiyi Düzenle')
+            ->assertSeeText('Atlas')
+            ->assertSeeText('Pera');
+
+        $this->actingAs($user)
+            ->patch("/contacts/{$contact->id}", [
+                'company_id' => $newCompany->id,
+                'first_name' => 'Yeni',
+                'last_name' => 'Kisi',
+                'email' => 'yeni@example.com',
+                'phone' => '+90 555 111 11 11',
+            ])
+            ->assertRedirect('/contacts');
+
+        $this->assertDatabaseHas('contacts', [
+            'id' => $contact->id,
+            'company_id' => $newCompany->id,
+            'first_name' => 'Yeni',
+            'last_name' => 'Kisi',
+            'email' => 'yeni@example.com',
+            'phone' => '+90 555 111 11 11',
         ]);
     }
 

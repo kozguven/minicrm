@@ -30,4 +30,12 @@ class Contact extends Model
     {
         return $this->hasMany(Opportunity::class);
     }
+
+    /**
+     * @return HasMany<ContactInteraction, $this>
+     */
+    public function contactInteractions(): HasMany
+    {
+        return $this->hasMany(ContactInteraction::class);
+    }
 }

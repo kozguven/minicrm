@@ -70,8 +70,11 @@
                                         @endif
                                     </strong>
                                     <p class="muted">{{ optional($deal->closed_at)->format('d.m.Y H:i') ?: 'Kapanış bekleniyor' }}</p>
-                                    <div style="margin-top: 0.45rem;">
+                                    <div class="inline-actions" style="margin-top: 0.45rem; justify-content: flex-end;">
                                         <a class="btn btn-ghost" href="{{ url("/deals/{$deal->id}") }}">Detay</a>
+                                        @can('update', $deal)
+                                            <a class="btn btn-ghost" href="{{ url("/deals/{$deal->id}/edit") }}">Düzenle</a>
+                                        @endcan
                                     </div>
                                 </div>
                             </div>

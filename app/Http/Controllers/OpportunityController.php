@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\StoreOpportunityRequest;
+use App\Http\Requests\UpdateOpportunityRequest;
 use App\Http\Requests\UpdateOpportunityStageRequest;
 use App\Models\Contact;
 use App\Models\Opportunity;
@@ -86,6 +87,24 @@ class OpportunityController extends Controller
         ]);
     }
 
+    public function edit(Opportunity $opportunity): View
+    {
+        $this->authorize('update', $opportunity);
+
+        return view('opportunities.edit', [
+            'opportunity' => $opportunity,
+            'contacts' => Contact::query()
+                ->with('company')
+                ->orderBy('first_name')
+                ->orderBy('last_name')
+                ->get(),
+            'stages' => OpportunityStage::query()
+                ->orderBy('position')
+                ->orderBy('name')
+                ->get(),
+        ]);
+    }
+
     public function store(StoreOpportunityRequest $request): RedirectResponse
     {
         Opportunity::query()->create($request->validated());
@@ -98,6 +117,13 @@ class OpportunityController extends Controller
         $opportunity->update($request->validated());
 
         return $this->successRedirect($request, 'Firsat asamasi guncellendi.');
+    }
+
+    public function update(UpdateOpportunityRequest $request, Opportunity $opportunity): RedirectResponse
+    {
+        $opportunity->update($request->validated());
+
+        return $this->successRedirect($request, 'Firsat guncellendi.');
     }
 
     private function successRedirect(Request $request, string $message): RedirectResponse

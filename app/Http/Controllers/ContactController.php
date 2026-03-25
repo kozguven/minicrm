@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\StoreContactRequest;
+use App\Http\Requests\UpdateContactRequest;
 use App\Models\Company;
 use App\Models\Contact;
 use Illuminate\Http\RedirectResponse;
@@ -62,7 +63,21 @@ class ContactController extends Controller
                     ->with(['opportunityStage', 'deal'])
                     ->orderByDesc('expected_close_date')
                     ->orderBy('title'),
+                'contactInteractions' => fn ($query) => $query
+                    ->with('user')
+                    ->orderByDesc('happened_at')
+                    ->orderByDesc('id'),
             ]),
+        ]);
+    }
+
+    public function edit(Contact $contact): View
+    {
+        $this->authorize('update', $contact);
+
+        return view('contacts.edit', [
+            'contact' => $contact,
+            'companies' => Company::query()->orderBy('name')->get(),
         ]);
     }
 
@@ -71,5 +86,12 @@ class ContactController extends Controller
         Contact::query()->create($request->validated());
 
         return redirect('/contacts');
+    }
+
+    public function update(UpdateContactRequest $request, Contact $contact): RedirectResponse
+    {
+        $contact->update($request->validated());
+
+        return redirect('/contacts')->with('status', 'Kisi guncellendi.');
     }
 }

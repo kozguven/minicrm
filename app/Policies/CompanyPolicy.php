@@ -26,4 +26,9 @@ class CompanyPolicy
     {
         return $this->permissionResolver->can($user, 'companies.create');
     }
+
+    public function update(User $user, Company $company): bool
+    {
+        return $this->permissionResolver->can($user, 'companies.create');
+    }
 }

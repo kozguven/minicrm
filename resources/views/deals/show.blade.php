@@ -8,6 +8,9 @@
                 title="Anlaşma Detayı"
                 subtitle="Kapanış kaydı ve bağlı fırsat bilgisini inceleyin."
             >
+                @can('update', $deal)
+                    <a class="btn btn-ghost" href="{{ url("/deals/{$deal->id}/edit") }}">Düzenle</a>
+                @endcan
                 <a class="btn btn-secondary" href="{{ url('/deals') }}">Listeye Dön</a>
             </x-ui.page-header>
 

@@ -4,11 +4,13 @@ namespace App\Providers;
 
 use App\Models\Company;
 use App\Models\Contact;
+use App\Models\ContactInteraction;
 use App\Models\CrmTask;
 use App\Models\Deal;
 use App\Models\Opportunity;
 use App\Policies\CompanyPolicy;
 use App\Policies\ContactPolicy;
+use App\Policies\ContactInteractionPolicy;
 use App\Policies\CrmTaskPolicy;
 use App\Policies\DealPolicy;
 use App\Policies\OpportunityPolicy;
@@ -32,6 +34,7 @@ class AppServiceProvider extends ServiceProvider
     {
         Gate::policy(Company::class, CompanyPolicy::class);
         Gate::policy(Contact::class, ContactPolicy::class);
+        Gate::policy(ContactInteraction::class, ContactInteractionPolicy::class);
         Gate::policy(CrmTask::class, CrmTaskPolicy::class);
         Gate::policy(Deal::class, DealPolicy::class);
         Gate::policy(Opportunity::class, OpportunityPolicy::class);

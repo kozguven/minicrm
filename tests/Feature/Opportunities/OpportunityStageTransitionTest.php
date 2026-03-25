@@ -23,6 +23,8 @@ class OpportunityStageTransitionTest extends TestCase
         $this->get('/opportunities')->assertRedirect('/login');
         $this->get('/opportunities/create')->assertRedirect('/login');
         $this->post('/opportunities', [])->assertRedirect('/login');
+        $this->get("/opportunities/{$opportunity->id}/edit")->assertRedirect('/login');
+        $this->patch("/opportunities/{$opportunity->id}", [])->assertRedirect('/login');
         $this->patch("/opportunities/{$opportunity->id}/stage", [
             'opportunity_stage_id' => OpportunityStage::factory()->create()->id,
         ])->assertRedirect('/login');
@@ -46,6 +48,14 @@ class OpportunityStageTransitionTest extends TestCase
             'title' => 'Mini CRM Retainer',
             'value' => '15000',
             'expected_close_date' => '2026-04-30',
+        ])->assertForbidden();
+        $this->actingAs($user)->get("/opportunities/{$opportunity->id}/edit")->assertForbidden();
+        $this->actingAs($user)->patch("/opportunities/{$opportunity->id}", [
+            'contact_id' => $contact->id,
+            'opportunity_stage_id' => $stage->id,
+            'title' => 'Yetkisiz Guncelleme',
+            'value' => '10000',
+            'expected_close_date' => '2026-05-01',
         ])->assertForbidden();
         $this->actingAs($user)->patch("/opportunities/{$opportunity->id}/stage", [
             'opportunity_stage_id' => OpportunityStage::factory()->create()->id,
@@ -233,6 +243,56 @@ class OpportunityStageTransitionTest extends TestCase
             ])
             ->assertOk()
             ->assertSeeText('Lutfen gecerli bir asama secin.');
+    }
+
+    public function test_user_with_opportunities_edit_permission_can_open_edit_screen_and_update_opportunity(): void
+    {
+        $user = $this->userWithPermissions(['opportunities.edit']);
+        $contact = Contact::factory()->create([
+            'first_name' => 'Ayse',
+            'last_name' => 'Yilmaz',
+        ]);
+        $otherContact = Contact::factory()->create([
+            'first_name' => 'Mert',
+            'last_name' => 'Can',
+        ]);
+        $stage = OpportunityStage::factory()->create(['name' => 'Teklif']);
+        $otherStage = OpportunityStage::factory()->create(['name' => 'Muzakere']);
+        $opportunity = Opportunity::factory()->create([
+            'contact_id' => $contact->id,
+            'opportunity_stage_id' => $stage->id,
+            'title' => 'Eski Firsat',
+            'value' => 10000,
+            'expected_close_date' => '2026-04-30',
+        ]);
+
+        $this->actingAs($user)
+            ->get("/opportunities/{$opportunity->id}/edit")
+            ->assertOk()
+            ->assertSeeText('Fırsatı Düzenle')
+            ->assertSeeText('Ayse Yilmaz')
+            ->assertSeeText('Mert Can')
+            ->assertSeeText('Teklif')
+            ->assertSeeText('Muzakere');
+
+        $this->actingAs($user)
+            ->patch("/opportunities/{$opportunity->id}", [
+                'contact_id' => $otherContact->id,
+                'opportunity_stage_id' => $otherStage->id,
+                'title' => 'Yeni Firsat',
+                'value' => '25000.75',
+                'expected_close_date' => '2026-05-10',
+            ])
+            ->assertRedirect('/today');
+
+        $this->assertDatabaseHas('opportunities', [
+            'id' => $opportunity->id,
+            'contact_id' => $otherContact->id,
+            'opportunity_stage_id' => $otherStage->id,
+            'title' => 'Yeni Firsat',
+            'value' => '25000.75',
+            'expected_close_date' => '2026-05-10',
+        ]);
     }
 
     /**

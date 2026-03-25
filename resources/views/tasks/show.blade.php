@@ -14,6 +14,9 @@
                 title="Görev Detayı"
                 subtitle="Görevin durumunu, terminini ve bağlı fırsat bilgisini yönetin."
             >
+                @can('update', $task)
+                    <a class="btn btn-ghost" href="{{ url("/tasks/{$task->id}/edit") }}">Düzenle</a>
+                @endcan
                 <a class="btn btn-secondary" href="{{ url('/tasks') }}">Listeye Dön</a>
             </x-ui.page-header>
 

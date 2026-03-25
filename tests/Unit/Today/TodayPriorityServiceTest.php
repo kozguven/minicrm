@@ -63,16 +63,17 @@ class TodayPriorityServiceTest extends TestCase
         $sections = app(TodayPriorityService::class)->build();
 
         $this->assertSame(
-            ['call', 'critical_opportunity', 'overdue_task'],
+            ['call', 'critical_opportunity', 'overdue_task', 'due_follow_up'],
             array_column($sections, 'type')
         );
         $this->assertSame(
-            ['Aranacak Kişiler', 'Kritik Fırsatlar', 'Geciken Görevler'],
+            ['Aranacak Kişiler', 'Kritik Fırsatlar', 'Geciken Görevler', 'Takip Edilecek Görüşmeler'],
             array_column($sections, 'title')
         );
         $this->assertSame([$callContact->id], $sections[0]['items']->pluck('id')->all());
         $this->assertSame([$criticalOpportunity->id], $sections[1]['items']->pluck('id')->all());
         $this->assertSame([$overdueTask->id], $sections[2]['items']->pluck('id')->all());
+        $this->assertCount(0, $sections[3]['items']);
     }
 
     public function test_excludes_contacts_without_phone_from_call_list(): void

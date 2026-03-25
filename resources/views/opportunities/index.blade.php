@@ -60,8 +60,11 @@
                                     <div class="text-right">
                                         <p class="muted">{{ $opportunity->opportunityStage?->name }}</p>
                                         <strong>{{ number_format((float) $opportunity->value, 2, ',', '.') }} TL</strong>
-                                        <div style="margin-top: 0.45rem;">
+                                        <div class="inline-actions" style="margin-top: 0.45rem; justify-content: flex-end;">
                                             <a class="btn btn-ghost" href="{{ url("/opportunities/{$opportunity->id}") }}">Detay</a>
+                                            @can('update', $opportunity)
+                                                <a class="btn btn-ghost" href="{{ url("/opportunities/{$opportunity->id}/edit") }}">Düzenle</a>
+                                            @endcan
                                         </div>
                                     </div>
                                 </div>

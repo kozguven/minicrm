@@ -2,11 +2,11 @@
 
 namespace App\Policies;
 
-use App\Models\Deal;
+use App\Models\ContactInteraction;
 use App\Models\User;
 use App\Services\Permissions\PermissionResolver;
 
-class DealPolicy
+class ContactInteractionPolicy
 {
     public function __construct(
         private readonly PermissionResolver $permissionResolver,
@@ -17,7 +17,7 @@ class DealPolicy
         return $this->permissionResolver->can($user, 'companies.view');
     }
 
-    public function view(User $user, Deal $deal): bool
+    public function view(User $user, ContactInteraction $contactInteraction): bool
     {
         return $this->permissionResolver->can($user, 'companies.view');
     }
@@ -28,7 +28,7 @@ class DealPolicy
             && $this->permissionResolver->can($user, 'companies.create');
     }
 
-    public function update(User $user, Deal $deal): bool
+    public function update(User $user, ContactInteraction $contactInteraction): bool
     {
         return $this->permissionResolver->can($user, 'companies.view')
             && $this->permissionResolver->can($user, 'companies.create');

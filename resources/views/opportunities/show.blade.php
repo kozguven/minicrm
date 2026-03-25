@@ -12,6 +12,9 @@
                 title="Fırsat Detayı"
                 subtitle="Fırsatın aşama, değer ve görev bilgisini tek ekranda izleyin."
             >
+                @can('update', $opportunity)
+                    <a class="btn btn-ghost" href="{{ url("/opportunities/{$opportunity->id}/edit") }}">Düzenle</a>
+                @endcan
                 <a class="btn btn-secondary" href="{{ url('/opportunities') }}">Listeye Dön</a>
             </x-ui.page-header>
 

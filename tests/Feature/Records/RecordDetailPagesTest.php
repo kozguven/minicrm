@@ -85,13 +85,16 @@ class RecordDetailPagesTest extends TestCase
         $this->actingAs($user)
             ->get("/companies/{$company->id}")
             ->assertOk()
+            ->assertSee('class="panel panel--xl"', false)
             ->assertSeeText('Şirket Detayı')
             ->assertSeeText('Atlas Lojistik')
-            ->assertSeeText('Ayse Yildiz');
+            ->assertSeeText('Ayse Yildiz')
+            ->assertSee("href=\"/contacts/{$contact->id}#gorusmeler\"", false);
 
         $this->actingAs($user)
             ->get("/contacts/{$contact->id}")
             ->assertOk()
+            ->assertSee('class="panel panel--xl"', false)
             ->assertSeeText('Kişi Detayı')
             ->assertSeeText('Ayse Yildiz')
             ->assertSeeText('Atlas Yenileme Paketi');
@@ -116,6 +119,45 @@ class RecordDetailPagesTest extends TestCase
             ->assertSeeText('Anlaşma Detayı')
             ->assertSeeText('Atlas Yenileme Paketi')
             ->assertSeeText('Ayse Yildiz');
+    }
+
+    public function test_user_with_edit_permissions_sees_edit_links_on_detail_pages(): void
+    {
+        $user = $this->userWithPermissions(['companies.view', 'companies.create', 'opportunities.edit']);
+
+        $company = Company::factory()->create();
+        $contact = Contact::factory()->create(['company_id' => $company->id]);
+        $opportunity = Opportunity::factory()->create([
+            'contact_id' => $contact->id,
+            'opportunity_stage_id' => OpportunityStage::factory()->create()->id,
+        ]);
+        $task = CrmTask::factory()->create(['opportunity_id' => $opportunity->id]);
+        $deal = Deal::factory()->create(['opportunity_id' => $opportunity->id]);
+
+        $this->actingAs($user)
+            ->get("/companies/{$company->id}")
+            ->assertOk()
+            ->assertSee("/companies/{$company->id}/edit", false);
+
+        $this->actingAs($user)
+            ->get("/contacts/{$contact->id}")
+            ->assertOk()
+            ->assertSee("/contacts/{$contact->id}/edit", false);
+
+        $this->actingAs($user)
+            ->get("/opportunities/{$opportunity->id}")
+            ->assertOk()
+            ->assertSee("/opportunities/{$opportunity->id}/edit", false);
+
+        $this->actingAs($user)
+            ->get("/tasks/{$task->id}")
+            ->assertOk()
+            ->assertSee("/tasks/{$task->id}/edit", false);
+
+        $this->actingAs($user)
+            ->get("/deals/{$deal->id}")
+            ->assertOk()
+            ->assertSee("/deals/{$deal->id}/edit", false);
     }
 
     /**

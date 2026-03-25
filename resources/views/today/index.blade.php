@@ -66,6 +66,32 @@
                                                         <p class="muted">Aşama: {{ $item->opportunityStage?->name ?: 'Belirsiz' }}</p>
                                                         <a class="btn btn-ghost" href="{{ url("/opportunities/{$item->id}") }}">Fırsat Detayı</a>
                                                     </div>
+                                                @elseif ($section['type'] === 'due_follow_up')
+                                                    <div class="surface-stack" style="gap: 0.35rem;">
+                                                        <div class="content-card__header">
+                                                            <h3 class="content-card__title">{{ $item->summary }}</h3>
+                                                            <span class="muted">{{ $item->follow_up_due_at?->format('d.m.Y H:i') ?: 'Tarih yok' }}</span>
+                                                        </div>
+                                                        <p class="muted">
+                                                            {{ $item->contact?->first_name }} {{ $item->contact?->last_name }}
+                                                            @if ($item->contact?->company)
+                                                                · {{ $item->contact->company->name }}
+                                                            @endif
+                                                        </p>
+                                                        <p class="muted">Kanal: {{ strtoupper($item->channel) }}</p>
+
+                                                        <div class="inline-actions">
+                                                            <a class="btn btn-ghost" href="{{ url("/contacts/{$item->contact_id}") }}">Kişi Detayı</a>
+
+                                                            @can('update', $item)
+                                                                <form method="POST" action="{{ url("/contact-interactions/{$item->id}/toggle-follow-up") }}">
+                                                                    @csrf
+                                                                    @method('PATCH')
+                                                                    <button class="btn btn-secondary" type="submit">Tamamlandı Olarak İşaretle</button>
+                                                                </form>
+                                                            @endcan
+                                                        </div>
+                                                    </div>
                                                 @else
                                                     <div class="surface-stack" style="gap: 0.35rem;">
                                                         <div class="content-card__header">

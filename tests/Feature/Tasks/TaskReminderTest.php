@@ -25,6 +25,8 @@ class TaskReminderTest extends TestCase
             'title' => 'Mini CRM follow-up',
             'due_at' => now()->addDay()->format('Y-m-d\TH:i'),
         ])->assertRedirect('/login');
+        $this->get("/tasks/{$task->id}/edit")->assertRedirect('/login');
+        $this->patch("/tasks/{$task->id}", [])->assertRedirect('/login');
         $this->patch("/tasks/{$task->id}/toggle-complete")->assertRedirect('/login');
     }
 
@@ -32,6 +34,7 @@ class TaskReminderTest extends TestCase
     {
         $user = User::factory()->create();
         $opportunity = Opportunity::factory()->create();
+        $task = CrmTask::factory()->create();
 
         $this->actingAs($user)->get('/tasks')->assertForbidden();
         $this->actingAs($user)->get('/tasks/create')->assertForbidden();
@@ -39,6 +42,12 @@ class TaskReminderTest extends TestCase
             'opportunity_id' => $opportunity->id,
             'title' => 'Yetkisiz gorev',
             'due_at' => now()->addDay()->format('Y-m-d\TH:i'),
+        ])->assertForbidden();
+        $this->actingAs($user)->get("/tasks/{$task->id}/edit")->assertForbidden();
+        $this->actingAs($user)->patch("/tasks/{$task->id}", [
+            'opportunity_id' => $opportunity->id,
+            'title' => 'Yetkisiz guncelleme',
+            'due_at' => now()->addDay()->format('Y-m-d H:i:s'),
         ])->assertForbidden();
     }
 
@@ -249,6 +258,40 @@ class TaskReminderTest extends TestCase
             ->assertSeeText($matchingTask->title)
             ->assertSeeText('Kritik Demo Toplantisi')
             ->assertDontSeeText($completedTask->title);
+    }
+
+    public function test_user_with_companies_view_and_create_permissions_can_open_task_edit_screen_and_update_task(): void
+    {
+        $user = $this->userWithPermissions(['companies.view', 'companies.create']);
+        $opportunity = Opportunity::factory()->create(['title' => 'Eski Firsat']);
+        $otherOpportunity = Opportunity::factory()->create(['title' => 'Yeni Firsat']);
+        $task = CrmTask::factory()->create([
+            'opportunity_id' => $opportunity->id,
+            'title' => 'Eski Gorev',
+            'due_at' => now()->addDay(),
+        ]);
+
+        $this->actingAs($user)
+            ->get("/tasks/{$task->id}/edit")
+            ->assertOk()
+            ->assertSeeText('Görevi Düzenle')
+            ->assertSeeText('Eski Firsat')
+            ->assertSeeText('Yeni Firsat');
+
+        $this->actingAs($user)
+            ->patch("/tasks/{$task->id}", [
+                'opportunity_id' => $otherOpportunity->id,
+                'title' => 'Yeni Gorev',
+                'due_at' => '2026-03-31 11:45:00',
+            ])
+            ->assertRedirect('/tasks');
+
+        $this->assertDatabaseHas('crm_tasks', [
+            'id' => $task->id,
+            'opportunity_id' => $otherOpportunity->id,
+            'title' => 'Yeni Gorev',
+            'due_at' => '2026-03-31 11:45:00',
+        ]);
     }
 
     /**

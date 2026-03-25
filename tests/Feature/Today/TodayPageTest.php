@@ -118,6 +118,37 @@ class TodayPageTest extends TestCase
             ->assertDontSeeText('Bugun tamamlanacak gorev');
     }
 
+    public function test_today_page_lists_due_contact_follow_ups(): void
+    {
+        Carbon::setTestNow('2026-03-23 10:00:00');
+
+        $user = $this->userWithPermissions(['companies.view']);
+        $contact = Contact::factory()->create([
+            'first_name' => 'Selim',
+            'last_name' => 'Arslan',
+        ]);
+
+        \DB::table('contact_interactions')->insert([
+            'contact_id' => $contact->id,
+            'user_id' => $user->id,
+            'channel' => 'call',
+            'happened_at' => '2026-03-22 16:00:00',
+            'summary' => 'Musteri geri donus bekliyor',
+            'notes' => 'Detayli teklif gonderildi.',
+            'follow_up_due_at' => '2026-03-23 09:00:00',
+            'follow_up_completed_at' => null,
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        $this->actingAs($user)
+            ->get('/today')
+            ->assertOk()
+            ->assertSeeText('Takip Edilecek Görüşmeler')
+            ->assertSeeText('Musteri geri donus bekliyor')
+            ->assertSeeText('Selim Arslan');
+    }
+
     /**
      * @param  list<string>  $permissionKeys
      */

@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\ConvertOpportunityToDealRequest;
 use App\Http\Requests\StoreDealRequest;
+use App\Http\Requests\UpdateDealRequest;
 use App\Models\Deal;
 use App\Models\Opportunity;
 use App\Services\Audit\AuditLogger;
@@ -73,6 +74,17 @@ class DealController extends Controller
         ]);
     }
 
+    public function edit(Deal $deal): View
+    {
+        $this->authorize('update', $deal);
+
+        return view('deals.edit', [
+            'deal' => $deal->load([
+                'opportunity.contact.company',
+            ]),
+        ]);
+    }
+
     public function store(StoreDealRequest $request, AuditLogger $auditLogger): RedirectResponse
     {
         $validated = $request->validated();
@@ -119,6 +131,13 @@ class DealController extends Controller
         );
 
         return $this->successRedirect($request, 'Firsat anlasmaya donusturuldu.');
+    }
+
+    public function update(UpdateDealRequest $request, Deal $deal): RedirectResponse
+    {
+        $deal->update($request->validated());
+
+        return $this->successRedirect($request, 'Anlasma guncellendi.');
     }
 
     private function successRedirect(Request $request, string $message): RedirectResponse

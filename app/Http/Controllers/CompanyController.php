@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\StoreCompanyRequest;
+use App\Http\Requests\UpdateCompanyRequest;
 use App\Models\Company;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -57,10 +58,26 @@ class CompanyController extends Controller
         ]);
     }
 
+    public function edit(Company $company): View
+    {
+        $this->authorize('update', $company);
+
+        return view('companies.edit', [
+            'company' => $company,
+        ]);
+    }
+
     public function store(StoreCompanyRequest $request): RedirectResponse
     {
         Company::query()->create($request->validated());
 
         return redirect('/companies');
+    }
+
+    public function update(UpdateCompanyRequest $request, Company $company): RedirectResponse
+    {
+        $company->update($request->validated());
+
+        return redirect('/companies')->with('status', 'Sirket guncellendi.');
     }
 }

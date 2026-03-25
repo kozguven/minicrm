@@ -83,6 +83,7 @@
                                 @can('update', $task)
                                     <div class="inline-actions">
                                         <a class="btn btn-ghost" href="{{ url("/tasks/{$task->id}") }}">Detay</a>
+                                        <a class="btn btn-ghost" href="{{ url("/tasks/{$task->id}/edit") }}">Düzenle</a>
 
                                         <form method="POST" action="{{ url("/tasks/{$task->id}/toggle-complete") }}">
                                             @csrf
