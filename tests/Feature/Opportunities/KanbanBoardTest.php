@@ -51,6 +51,58 @@ class KanbanBoardTest extends TestCase
             ->assertSee('kanban-card--draggable', false);
     }
 
+    public function test_stage_move_from_kanban_flow_writes_audit_log_when_user_is_authorized(): void
+    {
+        $user = $this->userWithPermissions(['companies.view', 'opportunities.edit']);
+        $fromStage = OpportunityStage::factory()->create(['name' => 'Ilk', 'position' => 1]);
+        $toStage = OpportunityStage::factory()->create(['name' => 'Muzakere', 'position' => 2]);
+        $opportunity = Opportunity::factory()->create([
+            'opportunity_stage_id' => $fromStage->id,
+        ]);
+
+        $this->actingAs($user)
+            ->patch("/opportunities/{$opportunity->id}/stage", [
+                'opportunity_stage_id' => $toStage->id,
+            ])
+            ->assertRedirect('/opportunities');
+
+        $this->assertDatabaseHas('opportunities', [
+            'id' => $opportunity->id,
+            'opportunity_stage_id' => $toStage->id,
+        ]);
+
+        $this->assertDatabaseHas('audit_logs', [
+            'user_id' => $user->id,
+            'entity_type' => Opportunity::class,
+            'entity_id' => $opportunity->id,
+            'action' => 'opportunity_stage_changed',
+        ]);
+    }
+
+    public function test_stage_move_is_blocked_without_edit_permission_and_no_audit_log_is_written(): void
+    {
+        $user = $this->userWithPermissions(['companies.view']);
+        $fromStage = OpportunityStage::factory()->create(['name' => 'Ilk', 'position' => 1]);
+        $toStage = OpportunityStage::factory()->create(['name' => 'Muzakere', 'position' => 2]);
+        $opportunity = Opportunity::factory()->create([
+            'opportunity_stage_id' => $fromStage->id,
+        ]);
+
+        $this->actingAs($user)
+            ->patch("/opportunities/{$opportunity->id}/stage", [
+                'opportunity_stage_id' => $toStage->id,
+            ])
+            ->assertForbidden();
+
+        $this->assertSame($fromStage->id, $opportunity->fresh()->opportunity_stage_id);
+
+        $this->assertDatabaseMissing('audit_logs', [
+            'entity_type' => Opportunity::class,
+            'entity_id' => $opportunity->id,
+            'action' => 'opportunity_stage_changed',
+        ]);
+    }
+
     /**
      * @param  list<string>  $permissionKeys
      */

@@ -56,7 +56,7 @@
                         <input class="input" id="closed_at" name="closed_at" type="datetime-local" value="{{ old('closed_at') }}">
                     </div>
 
-                    <div class="inline-actions">
+                    <div class="inline-actions form-actions">
                         <button class="btn btn-primary" type="submit">Anlaşmayı Kaydet</button>
                         <a class="btn btn-secondary" href="{{ url('/deals') }}">Vazgeç</a>
                     </div>

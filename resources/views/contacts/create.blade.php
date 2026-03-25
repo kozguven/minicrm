@@ -93,7 +93,7 @@
                     <input class="input" id="last_contacted_at" name="last_contacted_at" type="datetime-local" value="{{ old('last_contacted_at') }}">
                 </div>
 
-                <div class="inline-actions">
+                <div class="inline-actions form-actions">
                     <button class="btn btn-primary" type="submit">Kişiyi Kaydet</button>
                     <a class="btn btn-secondary" href="{{ url('/contacts') }}">Vazgeç</a>
                 </div>

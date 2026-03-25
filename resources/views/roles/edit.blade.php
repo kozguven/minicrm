@@ -46,7 +46,7 @@
                     @endforelse
                 </section>
 
-                <div class="inline-actions">
+                <div class="inline-actions form-actions">
                     <button class="btn btn-primary" type="submit">Değişiklikleri Kaydet</button>
                     <a class="btn btn-secondary" href="{{ url('/roles') }}">Vazgeç</a>
                 </div>

@@ -30,7 +30,7 @@
                     <input class="input" id="website" name="website" type="url" value="{{ old('website') }}">
                 </div>
 
-                <div class="inline-actions">
+                <div class="inline-actions form-actions">
                     <button class="btn btn-primary" type="submit">Şirketi Kaydet</button>
                     <a class="btn btn-secondary" href="{{ url('/companies') }}">Vazgeç</a>
                 </div>

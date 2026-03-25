@@ -98,7 +98,7 @@
                     </select>
                 </div>
 
-                <div class="inline-actions">
+                <div class="inline-actions form-actions">
                     <button class="btn btn-primary" type="submit">Fırsatı Kaydet</button>
                     <a class="btn btn-secondary" href="{{ url('/opportunities') }}">Vazgeç</a>
                 </div>

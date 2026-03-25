@@ -78,7 +78,7 @@
                     <input class="input" id="due_at" name="due_at" type="datetime-local" value="{{ old('due_at') }}">
                 </div>
 
-                <div class="inline-actions">
+                <div class="inline-actions form-actions">
                     <button class="btn btn-primary" type="submit">Görevi Kaydet</button>
                     <a class="btn btn-secondary" href="{{ url('/tasks') }}">Vazgeç</a>
                 </div>

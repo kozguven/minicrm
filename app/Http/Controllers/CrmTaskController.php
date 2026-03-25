@@ -7,6 +7,7 @@ use App\Http\Requests\UpdateCrmTaskRequest;
 use App\Models\CrmTask;
 use App\Models\Opportunity;
 use App\Models\User;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -161,7 +162,7 @@ class CrmTaskController extends Controller
         return redirect('/tasks')->with('status', 'Gorev guncellendi.');
     }
 
-    public function bulkUpdate(Request $request): RedirectResponse
+    public function bulkUpdate(Request $request): RedirectResponse|JsonResponse
     {
         $this->authorize('viewAny', CrmTask::class);
 
@@ -176,11 +177,15 @@ class CrmTaskController extends Controller
             ->unique()
             ->values();
 
-        DB::transaction(function () use ($taskIds, $validated): void {
+        $updatedCount = 0;
+
+        DB::transaction(function () use ($taskIds, $validated, &$updatedCount): void {
             $tasks = CrmTask::query()
                 ->whereIn('id', $taskIds)
                 ->lockForUpdate()
                 ->get();
+
+            $updatedCount = $tasks->count();
 
             foreach ($tasks as $task) {
                 $this->authorize('update', $task);
@@ -193,12 +198,19 @@ class CrmTaskController extends Controller
                 ]);
         });
 
-        return redirect('/tasks')->with(
-            'status',
-            $validated['action'] === 'complete'
-                ? 'Secili gorevler tamamlandi.'
-                : 'Secili gorevler yeniden acildi.',
-        );
+        $message = $validated['action'] === 'complete'
+            ? 'Secili gorevler tamamlandi.'
+            : 'Secili gorevler yeniden acildi.';
+
+        if ($request->expectsJson()) {
+            return response()->json([
+                'message' => $message,
+                'action' => $validated['action'],
+                'updated_count' => $updatedCount,
+            ]);
+        }
+
+        return redirect('/tasks')->with('status', $message);
     }
 
     private function successRedirect(Request $request): RedirectResponse

@@ -536,6 +536,10 @@ a {
     align-items: center;
 }
 
+.form-actions {
+    margin-top: 0.2rem;
+}
+
 .kanban-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
@@ -670,6 +674,22 @@ a {
 
     .btn {
         min-height: 2.5rem;
+    }
+
+    .form-actions {
+        position: sticky;
+        bottom: max(0.45rem, env(safe-area-inset-bottom));
+        z-index: 20;
+        padding: 0.46rem;
+        border: 1px solid color-mix(in srgb, var(--crm-border) 72%, white);
+        border-radius: var(--radius-md);
+        background: rgba(255, 253, 249, 0.94);
+        backdrop-filter: blur(8px);
+    }
+
+    .form-actions .btn {
+        flex: 1 1 46%;
+        min-height: 2.72rem;
     }
 
     .kanban-grid {

@@ -14,6 +14,7 @@ use App\Services\Actions\BestNextActionService;
 use App\Services\Audit\AuditLogger;
 use App\Services\Automation\StageTaskTemplateService;
 use App\Services\Timeline\ActivityTimelineService;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -173,7 +174,7 @@ class OpportunityController extends Controller
         Request $request,
         AuditLogger $auditLogger,
         StageTaskTemplateService $stageTaskTemplateService,
-    ): RedirectResponse {
+    ): RedirectResponse|JsonResponse {
         $this->authorize('viewAny', Opportunity::class);
 
         $validated = $request->validate([
@@ -187,11 +188,15 @@ class OpportunityController extends Controller
             ->unique()
             ->values();
 
-        DB::transaction(function () use ($opportunityIds, $validated, $request, $auditLogger, $stageTaskTemplateService): void {
+        $updatedCount = 0;
+
+        DB::transaction(function () use ($opportunityIds, $validated, $request, $auditLogger, $stageTaskTemplateService, &$updatedCount): void {
             $opportunities = Opportunity::query()
                 ->whereIn('id', $opportunityIds)
                 ->lockForUpdate()
                 ->get();
+
+            $updatedCount = $opportunities->count();
 
             foreach ($opportunities as $opportunity) {
                 $this->authorize('update', $opportunity);
@@ -206,7 +211,17 @@ class OpportunityController extends Controller
             }
         });
 
-        return redirect('/opportunities')->with('status', 'Secili firsatlarin asamasi guncellendi.');
+        $message = 'Secili firsatlarin asamasi guncellendi.';
+
+        if ($request->expectsJson()) {
+            return response()->json([
+                'message' => $message,
+                'stage_id' => (int) $validated['opportunity_stage_id'],
+                'updated_count' => $updatedCount,
+            ]);
+        }
+
+        return redirect('/opportunities')->with('status', $message);
     }
 
     public function kanban(Request $request): View

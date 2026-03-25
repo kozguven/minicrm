@@ -51,7 +51,7 @@
                     >
                 </div>
 
-                <div class="inline-actions">
+                <div class="inline-actions form-actions">
                     <button class="btn btn-primary" type="submit">Anlaşmayı Güncelle</button>
                     <a class="btn btn-secondary" href="{{ url('/deals') }}">Vazgeç</a>
                 </div>

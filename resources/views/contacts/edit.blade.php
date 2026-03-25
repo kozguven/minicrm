@@ -100,7 +100,7 @@
                     >
                 </div>
 
-                <div class="inline-actions">
+                <div class="inline-actions form-actions">
                     <button class="btn btn-primary" type="submit">Kişiyi Güncelle</button>
                     <a class="btn btn-secondary" href="{{ url('/contacts') }}">Vazgeç</a>
                 </div>
