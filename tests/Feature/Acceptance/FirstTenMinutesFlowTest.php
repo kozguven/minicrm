@@ -69,9 +69,16 @@ class FirstTenMinutesFlowTest extends TestCase
             'title' => 'Yillik Lisans',
             'value' => 96000,
             'expected_close_date' => '2026-03-23',
+            'next_step' => 'Demo toplantisi planla',
+            'next_step_due_at' => '2026-03-23 15:00:00',
         ])->assertRedirect('/opportunities');
 
         $opportunity = Opportunity::query()->where('title', 'Yillik Lisans')->firstOrFail();
+
+        $this->assertDatabaseHas('opportunities', [
+            'id' => $opportunity->id,
+            'next_step' => 'Demo toplantisi planla',
+        ]);
 
         $this->actingAs($user)->post('/tasks', [
             'opportunity_id' => $opportunity->id,
