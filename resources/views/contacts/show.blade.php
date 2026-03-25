@@ -40,6 +40,10 @@
                 </p>
                 <p class="muted">E-posta: {{ $contact->email ?: 'Eklenmedi' }}</p>
                 <p class="muted">Telefon: {{ $contact->phone ?: 'Eklenmedi' }}</p>
+                <div class="inline-actions">
+                    <span class="badge {{ $leadInsight['badge'] }}">{{ $leadInsight['label'] }}</span>
+                    <span class="muted">Skor: {{ $leadInsight['score'] }}</span>
+                </div>
             </article>
 
             <article class="content-card">

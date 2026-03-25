@@ -227,6 +227,29 @@ class ContactCrudTest extends TestCase
             ->assertDontSeeText('Mert Kaya');
     }
 
+    public function test_contacts_index_displays_lead_temperature_and_score(): void
+    {
+        $user = $this->userWithPermissions(['companies.view']);
+        $company = Company::factory()->create(['name' => 'Atlas Lojistik']);
+
+        Contact::factory()->create([
+            'company_id' => $company->id,
+            'first_name' => 'Aylin',
+            'last_name' => 'Demir',
+            'email' => 'aylin@atlas.test',
+            'phone' => '+90 555 000 00 00',
+            'lead_source' => 'referral',
+            'lead_status' => 'qualified',
+            'priority' => 'high',
+        ]);
+
+        $this->actingAs($user)
+            ->get('/contacts')
+            ->assertOk()
+            ->assertSeeText('Sicak Lead')
+            ->assertSeeText('Skor: 100');
+    }
+
     public function test_user_with_only_companies_view_permission_cannot_open_contact_create_screen(): void
     {
         $user = $this->userWithPermissions(['companies.view']);

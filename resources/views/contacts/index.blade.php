@@ -95,11 +95,18 @@
             @else
                 <div class="content-list">
                     @foreach ($contacts as $contact)
+                        @php
+                            $leadInsight = $leadInsights[$contact->id] ?? ['score' => 0, 'label' => 'Soguk Lead', 'badge' => 'badge--danger'];
+                        @endphp
                         <article class="content-card">
                             <div class="content-card__header">
                                 <div>
                                     <h2 class="content-card__title">{{ $contact->first_name }} {{ $contact->last_name }}</h2>
                                     <span class="muted">{{ $contact->company?->name }}</span>
+                                    <div class="inline-actions" style="margin-top: 0.35rem;">
+                                        <span class="badge {{ $leadInsight['badge'] }}">{{ $leadInsight['label'] }}</span>
+                                        <span class="muted">Skor: {{ $leadInsight['score'] }}</span>
+                                    </div>
                                 </div>
                                 <div class="inline-actions">
                                     <a class="btn btn-ghost" href="{{ url("/contacts/{$contact->id}") }}">Detay</a>

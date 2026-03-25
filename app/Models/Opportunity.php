@@ -67,6 +67,14 @@ class Opportunity extends Model
         return $this->hasOne(Deal::class);
     }
 
+    public function expectedRevenue(): float
+    {
+        $value = (float) ($this->value ?? 0);
+        $probability = max(0, min(100, (int) ($this->probability ?? 0)));
+
+        return $value * ($probability / 100);
+    }
+
     protected function casts(): array
     {
         return [

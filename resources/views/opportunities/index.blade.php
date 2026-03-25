@@ -126,6 +126,10 @@
 
                                 <p class="muted">Beklenen kapanış: {{ $opportunity->expected_close_date ?: 'Belirlenmedi' }}</p>
                                 <p class="muted">
+                                    Olasilik: %{{ (int) ($opportunity->probability ?? 0) }}
+                                    · Beklenen gelir: {{ number_format($opportunity->expectedRevenue(), 2, ',', '.') }} TL
+                                </p>
+                                <p class="muted">
                                     Sonraki adım: {{ $opportunity->next_step ?: 'Belirtilmedi' }}
                                     @if ($opportunity->next_step_due_at)
                                         · {{ $opportunity->next_step_due_at->format('d.m.Y H:i') }}

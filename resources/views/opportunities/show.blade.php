@@ -28,6 +28,10 @@
                 </div>
                 <p class="muted">Beklenen kapanış: {{ $opportunity->expected_close_date ?: 'Belirlenmedi' }}</p>
                 <p class="muted">
+                    Olasilik: %{{ (int) ($opportunity->probability ?? 0) }}
+                    · Beklenen gelir: {{ number_format($opportunity->expectedRevenue(), 2, ',', '.') }} TL
+                </p>
+                <p class="muted">
                     İlgili kişi:
                     @if ($opportunity->contact)
                         <a href="{{ url("/contacts/{$opportunity->contact->id}") }}">

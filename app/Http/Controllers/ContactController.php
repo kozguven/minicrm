@@ -8,6 +8,7 @@ use App\Models\Company;
 use App\Models\Contact;
 use App\Models\User;
 use App\Services\Actions\BestNextActionService;
+use App\Services\Leads\LeadScoringService;
 use App\Services\Timeline\ActivityTimelineService;
 use App\Services\Validation\DuplicateRecordService;
 use Illuminate\Http\RedirectResponse;
@@ -16,7 +17,7 @@ use Illuminate\View\View;
 
 class ContactController extends Controller
 {
-    public function index(Request $request): View
+    public function index(Request $request, LeadScoringService $leadScoringService): View
     {
         $this->authorize('viewAny', Contact::class);
 
@@ -64,8 +65,16 @@ class ContactController extends Controller
             default => $contacts->orderBy('first_name')->orderBy('last_name'),
         };
 
+        $contacts = $contacts->paginate(20)->withQueryString();
+        $leadInsights = $contacts->getCollection()
+            ->mapWithKeys(fn (Contact $contact): array => [
+                $contact->id => $this->buildLeadInsight($contact, $leadScoringService),
+            ])
+            ->all();
+
         return view('contacts.index', [
-            'contacts' => $contacts->paginate(20)->withQueryString(),
+            'contacts' => $contacts,
+            'leadInsights' => $leadInsights,
             'filters' => [
                 'q' => $search,
                 'lead_status' => $normalizedLeadStatus,
@@ -81,6 +90,7 @@ class ContactController extends Controller
         Contact $contact,
         BestNextActionService $bestNextActionService,
         ActivityTimelineService $activityTimelineService,
+        LeadScoringService $leadScoringService,
     ): View {
         $this->authorize('view', $contact);
 
@@ -100,6 +110,7 @@ class ContactController extends Controller
             'contact' => $contact,
             'bestNextAction' => $bestNextActionService->forContact($contact),
             'timelineEvents' => $activityTimelineService->forContact($contact),
+            'leadInsight' => $this->buildLeadInsight($contact, $leadScoringService),
         ]);
     }
 
@@ -166,5 +177,35 @@ class ContactController extends Controller
             'companies' => Company::query()->orderBy('name')->get(),
             'users' => User::query()->orderBy('name')->get(),
         ]);
+    }
+
+    /**
+     * @return array{score: int, label: string, badge: string}
+     */
+    private function buildLeadInsight(Contact $contact, LeadScoringService $leadScoringService): array
+    {
+        $score = $leadScoringService->score($contact);
+
+        if ($score >= 75) {
+            return [
+                'score' => $score,
+                'label' => 'Sicak Lead',
+                'badge' => 'badge--success',
+            ];
+        }
+
+        if ($score >= 45) {
+            return [
+                'score' => $score,
+                'label' => 'Ilik Lead',
+                'badge' => 'badge--info',
+            ];
+        }
+
+        return [
+            'score' => $score,
+            'label' => 'Soguk Lead',
+            'badge' => 'badge--danger',
+        ];
     }
 }

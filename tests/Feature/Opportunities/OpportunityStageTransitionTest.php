@@ -123,6 +123,30 @@ class OpportunityStageTransitionTest extends TestCase
             ->assertDontSeeText('Pera Danismanlik Paketi');
     }
 
+    public function test_opportunities_index_shows_probability_and_expected_revenue(): void
+    {
+        $user = $this->userWithPermissions(['companies.view']);
+        $stage = OpportunityStage::factory()->create(['name' => 'Teklif', 'position' => 1]);
+        $contact = Contact::factory()->create([
+            'first_name' => 'Aylin',
+            'last_name' => 'Demir',
+        ]);
+
+        Opportunity::factory()->create([
+            'contact_id' => $contact->id,
+            'opportunity_stage_id' => $stage->id,
+            'title' => 'Atlas Yenileme Paketi',
+            'value' => 12000,
+            'probability' => 25,
+        ]);
+
+        $this->actingAs($user)
+            ->get('/opportunities')
+            ->assertOk()
+            ->assertSeeText('Olasilik: %25')
+            ->assertSeeText('Beklenen gelir: 3.000,00 TL');
+    }
+
     public function test_user_with_companies_view_and_create_permissions_sees_opportunity_create_cta_on_index(): void
     {
         $user = $this->userWithPermissions(['companies.view', 'companies.create']);
